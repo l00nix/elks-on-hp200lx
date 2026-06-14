@@ -11,12 +11,17 @@ ELKS 16-bit Unix-like kernel up on **Hewlett-Packard 200LX palmtop** hardware.
 
 ---
 
-## 🟡 Release 1 — "Newton" (Partial Success)
+## Release 1 — "Newton" (Partial Success)
 
 **Release 1 boots ELKS to a usable interactive shell on a real, stock-clock HP
 200LX, with working keyboard input — but only via an external Apple Newton
 keyboard on the serial port.** The built-in HP 200LX keyboard does **not** work
 yet.
+
+![Apple Newton keyboard wired to a stock-clock HP 200LX running the ELKS shell](docs/hp200lx/images/devsetup.jpg)
+
+*Dev setup: an Apple Newton keyboard (foreground) wired to the HP 200LX serial
+port, with the ELKS shell on screen.*
 
 What works in Release 1:
 
@@ -36,23 +41,32 @@ ELKS 0.9.2-dev
 hi
 ```
 
-### ⚠️ Release 1 limitations
+![ELKS boot banner and shell session on the HP 200LX](docs/hp200lx/images/n24-shell-wide.jpg)
 
-- ❌ **The built-in HP 200LX keyboard does not work.** Input requires an
+*N24 on hardware: the boot banner (`top 3200 ... free`) followed by a working
+`ls` / `cd etc` / `ls` / `cat /etc/issue` session typed on the Newton keyboard.*
+
+![Close-up of the ELKS shell session on the HP 200LX](docs/hp200lx/images/n24-shell-closeup.jpg)
+
+*Close-up of the same session — `cat /etc/issue` printing `ELKS 0.9.2-dev`.*
+
+### Release 1 limitations
+
+- **The built-in HP 200LX keyboard does not work.** Input requires an
   external Apple Newton keyboard wired to the serial port. (This is the next
   major target — see the roadmap.)
-- 🖥️ **Stock-clock units only.** A crystal-upgraded ("double-speed") 200LX
+- **Stock-clock units only.** A crystal-upgraded ("double-speed") 200LX
   additionally needs its Hornet clock registers programmed (as Stefan Peichl's
   `DSPEED.COM` does); that support is not yet in the kernel, so on a
   double-speed unit the serial keyboard produces garbage.
-- 🧠 **RAM is tight.** The root is a 360 KB RAM disk carved from conventional
+- **RAM is tight.** The root is a 360 KB RAM disk carved from conventional
   memory, leaving a usable ceiling of roughly ~150 KB. Good enough for a shell
   and small programs; a disk-based root is on the roadmap.
-- 🧪 **Reclaimed high memory is not yet stress-tested.** The memory-map fix
+- **Reclaimed high memory is not yet stress-tested.** The memory-map fix
   boots cleanly and `fork()` succeeds without rootfs corruption, but the
   reclaimed ~76 KB above the ramdisk is only on the free list so far and has not
   been exercised under heavy memory pressure.
-- ⏱️ **No kernel timer.** The HP 200LX's Hornet ASIC does not deliver the
+- **No kernel timer.** The HP 200LX's Hornet ASIC does not deliver the
   `IRQ0`/`Int 08h` timer tick to ELKS, so there are no `jiffies` and no
   timer-driven services. Input is polled from the kernel idle loop instead.
 
@@ -138,6 +152,15 @@ See [`docs/hp200lx/STRATEGY.md`](docs/hp200lx/STRATEGY.md) for details.
 
 - [ELKS](https://github.com/ghaerr/elks) and its authors — the kernel this
   builds on (GPLv2).
+- **Richard L. Dubs** — the MINIX-on-HP-200LX work that the DOS boot/loader
+  chain reused here descends from: `CARDIO` (the card/RAM-disk loader,
+  "Copyright (C) 1998 Richard L. Dubs") and the `INT13`/`PUT13` INT 13h
+  RAM-disk handler that lets the palmtop load and run a non-DOS kernel +
+  ramdisk image. See his notes
+  ([archived](https://web.archive.org/web/20010428164137/http://users.erols.com/rld/),
+  [MINIX.TXT](https://web.archive.org/web/20010428164137/http://users.erols.com/rld/MINIX.TXT))
+  and the related **dosminix** project
+  ([archived](https://web.archive.org/web/20040924083657/http://minix.technoir.org/)).
 - **K. Adachi** — the `NTKPAC05` DOS Newton-keyboard driver whose wiring and
   protocol this reuses.
 - **Stefan Peichl** — `DSPEED.COM`, the double-speed HP 200LX clock driver
