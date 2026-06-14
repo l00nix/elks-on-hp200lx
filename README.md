@@ -152,11 +152,11 @@ See [`docs/hp200lx/STRATEGY.md`](docs/hp200lx/STRATEGY.md) for details.
 
 - [ELKS](https://github.com/ghaerr/elks) and its authors — the kernel this
   builds on (GPLv2).
-- **Richard L. Dubs** — the MINIX-on-HP-200LX work that the DOS boot/loader
-  chain reused here descends from: `CARDIO` (the card/RAM-disk loader,
-  "Copyright (C) 1998 Richard L. Dubs") and the `INT13`/`PUT13` INT 13h
-  RAM-disk handler that lets the palmtop load and run a non-DOS kernel +
-  ramdisk image. See his notes
+- **Richard L. Dubs** — the MINIX-on-HP-200LX work that this DOS boot/loader
+  chain descends from. Release 1 **directly reuses** his `CARDIO` card/RAM-disk
+  loader binary ("Copyright (C) 1998 Richard L. Dubs") and the `INT13`/`PUT13`
+  INT 13h RAM-disk handler binaries that let the palmtop load and run a non-DOS
+  kernel + ramdisk image. See his notes
   ([archived](https://web.archive.org/web/20010428164137/http://users.erols.com/rld/),
   [MINIX.TXT](https://web.archive.org/web/20010428164137/http://users.erols.com/rld/MINIX.TXT))
   and the related **dosminix** project

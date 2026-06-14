@@ -47,8 +47,8 @@ timer-hook to revive the tick), then disk-based root and double-speed support.
 See `docs/hp200lx/STRATEGY.md`.
 
 ## Credits
-ELKS / ghaerr and the ELKS authors (GPLv2); Richard L. Dubs for the
-MINIX-on-HP-200LX `CARDIO` loader and `INT13` RAM-disk handler that the DOS
-boot chain descends from (and the related dosminix project); K. Adachi for the
-`NTKPAC05` Newton-keyboard wiring/protocol reference; Stefan Peichl for
-`DSPEED.COM` double-speed clock behavior reference.
+ELKS / ghaerr and the ELKS authors (GPLv2); Richard L. Dubs — this release
+directly reuses his MINIX-on-HP-200LX `CARDIO` loader and `INT13`/`PUT13` INT
+13h RAM-disk handler binaries (and descends from the related dosminix project);
+K. Adachi for the `NTKPAC05` Newton-keyboard wiring/protocol reference; Stefan
+Peichl for `DSPEED.COM` double-speed clock behavior reference.
