@@ -392,7 +392,7 @@ getsp:
 // Halt - wait for next interrupt to save CPU power
         .global idle_halt
 idle_halt:
-        hlt
+        sti     // hp200lx_n24_nohlt: no IRQs on HP200LX, never hlt
         ret
 
 //------------------------------------------------------------------------------

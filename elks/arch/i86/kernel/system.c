@@ -60,10 +60,13 @@ unsigned int INITPROC setup_arch(void)
     memend = SETUP_MEM_KBYTES << 6;
 
 #if defined(CONFIG_RAMDISK_SEGMENT) && (CONFIG_RAMDISK_SEGMENT > 0)
-    if (CONFIG_RAMDISK_SEGMENT <= memend) {
-        /* reduce top of memory by size of ram disk*/
-        memend -= CONFIG_RAMDISK_SECTORS << 5;
-    }
+    /* hp200lx_n24_memcap: the preloaded ramdisk sits at a FIXED segment
+     * in the MIDDLE of BIOS-reported conventional memory (not at the
+     * top). Cap the main user pool at the ramdisk start so processes
+     * never allocate over the root fs. The conventional RAM above the
+     * ramdisk is added back to the free pool in kernel_init(). */
+    if (CONFIG_RAMDISK_SEGMENT < memend)
+        memend = CONFIG_RAMDISK_SEGMENT;
 #endif
 
     arch_cpu = SETUP_CPU_TYPE;

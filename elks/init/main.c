@@ -152,6 +152,8 @@ static void FARPROC far_start_kernel(void)
     idle_loop();                    /* no return */
 }
 
+extern void hp200lx_newton_idle_poll_n24(void);
+
 /* the idle task loop, no return */
 static void idle_loop(void)
 {
@@ -186,6 +188,7 @@ static void idle_loop(void)
         }
 #endif
         schedule();
+        hp200lx_newton_idle_poll_n24();
 #ifdef CONFIG_TIMER_INT0F
         int0F();        /* simulate timer interrupt hooked on IRQ 7 */
 #else
@@ -269,6 +272,19 @@ static void INITPROC kernel_init(void)
     seg_add(s, e);
 #else
     seg_t s = 0, e = 0;
+#endif
+
+#if defined(CONFIG_RAMDISK_SEGMENT) && (CONFIG_RAMDISK_SEGMENT > 0)
+    /* hp200lx_n24_topmem: reclaim conventional RAM above the mid-RAM
+     * ramdisk (used only transiently by the DOS loader's SaveHigh
+     * boot-copy buffer, free once ELKS is running). */
+    {
+        seg_t rd_end = (seg_t)((unsigned)CONFIG_RAMDISK_SEGMENT
+                               + ((unsigned)CONFIG_RAMDISK_SECTORS << 5));
+        seg_t mem_top = (seg_t)((unsigned)SETUP_MEM_KBYTES << 6);
+        if (rd_end < mem_top)
+            seg_add(rd_end, mem_top);
+    }
 #endif
 
     kernel_banner(s, e - s);
