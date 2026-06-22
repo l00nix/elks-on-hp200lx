@@ -203,16 +203,48 @@ dependency from the ATA-CF probe path:
 cf: wait timeout st=XX
 ```
 
-This should turn the R3D7 post-ramdisk hang into either a visible ATA-CF
-probe result or a clean boot to shell.
+R3D8 test result:
+
+- ELKS booted to the shell.
+- This confirms the R3D7 hang was very likely caused by the jiffies-based ATA
+  wait path rather than by the loader.
+- The standard ATA probe still did not find the CF card:
+
+```text
+cf: wait timeout st=ec
+cfa: ATA at 1f0/3f6 xtide=0,0 not found (-6)
+cf: wait timeout st=ec
+cfb: ATA at 1f0/3f6 xtide=0,0 not found (-6)
+```
+
+The `st=ec` byte is suspicious because `0xec` is also the ATA IDENTIFY command
+byte. This suggests the standard ATA port pair may not match how `CARDIO`
+leaves the HP 200LX PCMCIA CF card mapped.
+
+## R3D9 Diagnostic
+
+R3D9 keeps the successful R3D8 no-jiffies ATA wait path but stops forcing
+standard ATA mode:
+
+- `CONFIG_BLK_DEV_BHD` disabled
+- `CONFIG_BLK_DEV_ATA_CF` enabled
+- ATA mode left as AUTO
+- `ata.c` bounded CPU-loop delay retained
+- `ata.c` bounded port-poll wait retained
+
+On an 8086/8088-class system, the ELKS ATA-CF AUTO path should choose the
+XTCF-style port mapping instead of standard `0x1f0/0x3f6`. This tests whether
+the 200LX/CardIO combination exposes the CF card on the alternate port path
+that ELKS already knows how to probe.
 
 ## Test Notes to Capture
 
-When testing `RUNR3D8`, record:
+When testing `RUNR3D9`, record:
 
-- Whether it gets past the `rd: 360K ramdisk at 3200:0000` line.
+- Whether the boot lines mention `xtide=3,1` or another `xtide` value.
 - Whether ELKS still boots to the shell.
 - Any boot lines beginning with `cf`.
+- Any `cf: wait timeout st=XX` status byte.
 - Whether the internal keyboard still works.
 - The exact output of `fdisk -l /dev/cfa`.
 - If needed, the exact output of `fdisk /dev/cfa`.
