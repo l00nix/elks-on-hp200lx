@@ -102,13 +102,29 @@ R3D2 test result:
 
 R3D3 keeps the R3D2 kernel and DOS INT13 relocation sequence unchanged, but removes the DOS `PAUSE` after `CHK80.DBG`. This tests whether the stop was only the launcher pause rather than the BIOSHD probe kernel.
 
+R3D3 test result:
+
+- The loader got past the DOS batch file and entered `BTGVDX`.
+- It read the image and root filesystem, then stopped at `Press key for quiet copy/jump`.
+- That prompt is inside the loader's copy/jump path; the keyboard wait has already been patched out in this loader, so this is likely another image layout/copy cliff rather than a true key wait.
+- R3D3 used an 8-byte trailing file pad to force file phase 48. That may have reintroduced a file/header consistency problem similar to earlier post-build padding failures.
+
+## R3D4 Diagnostic
+
+R3D4 keeps the same BIOSHD kernel content and no-pause launcher, but uses the natural linked kernel image with no trailing file padding:
+
+- `KERNBOP` size: 67112 bytes
+- loader phase: 40
+
+This tests whether the R3D3 copy/jump stop was caused by the post-build file pad rather than the BIOSHD probe itself.
+
 ## Test Notes to Capture
 
-When testing `RUNR3D3`, record:
+When testing `RUNR3D4`, record:
 
 - Whether `CHK80.DBG` shows vector `00 00 00 80`.
 - The first 16 bytes dumped from `8000:0000`.
-- Whether it gets past the previous pause point.
+- Whether it gets past `Press key for quiet copy/jump`.
 - Whether ELKS still boots to the shell.
 - Any `R3D2 bioshd:` lines during boot.
 - Whether any ELKS command can see hard-disk devices, for example `fdisk -l` if available.
