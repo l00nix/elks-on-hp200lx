@@ -4,34 +4,43 @@ A **downstream fork of [ELKS](https://github.com/ghaerr/elks)** that brings the
 ELKS 16-bit Unix-like kernel up on **Hewlett-Packard 200LX palmtop** hardware.
 
 > This is community bring-up work, not an official ELKS release. It is a fork of
-> `ghaerr/elks`; the upstream project's own README is preserved as
-> [`UPSTREAM-README.md`](UPSTREAM-README.md). All upstream credit and the GPLv2
-> license remain with the ELKS authors. This fork tracks the HP 200LX effort
-> discussed in [ghaerr/elks#2236](https://github.com/ghaerr/elks/issues/2236).
+> `ghaerr/elks`; the upstream project's own README should be preserved as
+> `UPSTREAM-README.md`. All upstream credit and the GPLv2 license remain with
+> the ELKS authors. This fork tracks the HP 200LX effort discussed in
+> [ghaerr/elks#2236](https://github.com/ghaerr/elks/issues/2236).
 
 ---
 
-## Release 1 — "Newton" (Partial Success)
+## Release 2 - Internal Keyboard
 
-**Release 1 boots ELKS to a usable interactive shell on a real, stock-clock HP
-200LX, with working keyboard input — but only via an external Apple Newton
-keyboard on the serial port.** The built-in HP 200LX keyboard does **not** work
-yet.
+**Release 2 boots ELKS to a usable interactive shell on a real, stock-clock
+HP 200LX, with working input from the built-in HP 200LX keyboard.**
 
-![Apple Newton keyboard wired to a stock-clock HP 200LX running the ELKS shell](docs/hp200lx/images/devsetup.jpg)
+This is the first self-contained HP 200LX ELKS release: no external keyboard is
+needed. The tested build lineage is `N59`; the release package keeps the tested
+DOS entry point name `RUNN59`.
 
-*Dev setup: an Apple Newton keyboard (foreground) wired to the HP 200LX serial
-port, with the ELKS shell on screen.*
+![HP 200LX running ELKS Release 2 with no external keyboard attached](docs/hp200lx/images/release2-unit.jpg)
 
-What works in Release 1:
+*Release 2 on real HP 200LX hardware: ELKS running from the built-in keyboard,
+with no external keyboard attached.*
 
-- Boots cleanly to `/bin/sh` (BIOS console, RAM-root minix filesystem).
-- **Apple Newton keyboard** (serial) types into the shell — letters, Shift,
-  CapsLock, Ctrl (`^C`/`^D`), Tab, Return, Backspace, arrows.
-- **`fork()`/`exec()` work** — external commands like `ls` and `cat` run; the
-  root filesystem is stable.
+What works in Release 2:
 
-```
+- Boots cleanly to `/bin/sh` using the BIOS console and RAM-root minix
+  filesystem.
+- The **built-in HP 200LX keyboard** types into the ELKS shell.
+- Normal letters, numbers, punctuation, Enter, Backspace, Tab, and Space work.
+- Held Shift works, for example `Shift+q` produces `Q`.
+- Held Ctrl works, for example `Ctrl+c` reaches the shell/application.
+- Shift plus the blue HP application/menu keys produces the expected shifted
+  symbols such as `! @ # $ ^ & ( )`.
+- `fork()`/`exec()` work; external commands such as `ls` and `cat` run from the
+  RAM-root filesystem.
+
+Example shell session:
+
+```text
 # ls
 bin   bootopts  dev  etc  home  lib  linux  mnt  root  tmp
 # cd etc
@@ -41,127 +50,205 @@ ELKS 0.9.2-dev
 hi
 ```
 
-![ELKS boot banner and shell session on the HP 200LX](docs/hp200lx/images/n24-shell-wide.jpg)
+![ELKS shell on the HP 200LX showing ls and cat /etc/issue typed from the internal keyboard](docs/hp200lx/images/release2-shell.jpg)
 
-*N24 on hardware: the boot banner (`top 3200 ... free`) followed by a working
-`ls` / `cd etc` / `ls` / `cat /etc/issue` session typed on the Newton keyboard.*
+*Release 2 shell session on the HP 200LX: `ls` and `cat /etc/issue` typed on the
+built-in keyboard.*
 
-![Close-up of the ELKS shell session on the HP 200LX](docs/hp200lx/images/n24-shell-closeup.jpg)
+### Release 2 artifact
 
-*Close-up of the same session — `cat /etc/issue` printing `ELKS 0.9.2-dev`.*
+- Package: [`releases/hp200lx-release2.zip`](releases/hp200lx-release2.zip)
+- Tested DOS entry point: `RUNN59`
+- Kernel image inside the package: `KERNBOP`
+- Kernel size: `61488` bytes
+- Kernel SHA256:
+  `c29f88aa2c3979effdaa2f13f5a2566799bfb262178af68c8fe7b699475825d1`
+- Package SHA256:
+  `2be5647745ae6a523262a5c21e51c3fca0295ae6abfcf59272673eaca3a4a6c1`
 
-### Release 1 limitations
+### Release 2 limitations
 
-- **The built-in HP 200LX keyboard does not work.** Input requires an
-  external Apple Newton keyboard wired to the serial port. (This is the next
-  major target — see the roadmap.)
-- **Stock-clock units only.** A crystal-upgraded ("double-speed") 200LX
-  additionally needs its Hornet clock registers programmed (as Stefan Peichl's
-  `DSPEED.COM` does); that support is not yet in the kernel, so on a
-  double-speed unit the serial keyboard produces garbage.
-- **RAM is tight.** The root is a 360 KB RAM disk carved from conventional
-  memory, leaving a usable ceiling of roughly ~150 KB. Good enough for a shell
-  and small programs; a disk-based root is on the roadmap.
-- **Reclaimed high memory is not yet stress-tested.** The memory-map fix
-  boots cleanly and `fork()` succeeds without rootfs corruption, but the
-  reclaimed ~76 KB above the ramdisk is only on the free list so far and has not
-  been exercised under heavy memory pressure.
-- **No kernel timer.** The HP 200LX's Hornet ASIC does not deliver the
-  `IRQ0`/`Int 08h` timer tick to ELKS, so there are no `jiffies` and no
-  timer-driven services. Input is polled from the kernel idle loop instead.
+- This remains an experimental downstream/community ELKS build for the HP 200LX.
+- The root filesystem is still a RAM disk loaded by the DOS boot chain. This is
+  enough for a shell and small commands, but it is not yet a persistent native
+  install.
+- Persistent PCMCIA/CF hard-disk access from inside ELKS is a separate future
+  task.
+- The HP-specific keyboard work has been proven on real hardware, but it still
+  needs cleanup before it is suitable as an upstreamable ELKS platform driver.
+- HP-specific convenience functions such as display zoom, contrast, inverse
+  video, and other firmware-level key combinations still need separate review.
 
 ---
 
-## How it works (the two key ideas)
+## Release 1 - External Keyboard Bring-Up
 
-1. **Idle-loop input.** Because the kernel timer never fires on this hardware,
-   the usual timer-driven keyboard path is dead. Instead the serial UART is
-   polled from the **kernel idle loop** (`init/main.c`), and decoded keystrokes
-   are pushed into the console tty queue (`Console_conin()` → `chq_addch()` →
-   `wake_up()`), which wakes the shell blocked in `tty_read()`. No timers, no
-   interrupts required. `idle_halt` is patched from `hlt` to `sti; ret` so the
-   idle task spins instead of waiting for an interrupt that never comes.
+Release 1 proved the core boot path: ELKS could boot to a shell on the HP 200LX,
+run from a RAM-root filesystem, and accept input through an external serial
+keyboard path. It established the memory-map fixes, idle-loop polling approach,
+and DOS loader packaging that Release 2 builds on.
 
-2. **RAM-root memory-map fix.** The DOS loader preloads the 360 KB RAM-disk
-   root at a fixed segment (`0x3200`), but stock ELKS sized usable memory from
-   BIOS `INT 12h` (636 KB) and assumed the ramdisk sat at the top of memory — so
-   the process pool overlapped the root filesystem and `fork()` corrupted it.
-   The fix caps the pool at the ramdisk start and adds the conventional RAM
-   *above* the ramdisk back to the free list.
+Release 2 supersedes Release 1 for normal use because the HP 200LX is now
+self-contained.
 
-The detailed, blow-by-blow bring-up story (N0 → N24, including the dead ends) is
-in [`docs/hp200lx/BRINGUP_LOG.md`](docs/hp200lx/BRINGUP_LOG.md). The forward plan
-is in [`docs/hp200lx/STRATEGY.md`](docs/hp200lx/STRATEGY.md).
+---
 
-## What changed vs upstream ELKS
+## Install (run Release 2 on an HP 200LX)
 
-This branch (`hp200lx-newton`) is based on upstream ELKS commit
-[`69dfd4f2`](https://github.com/ghaerr/elks/commit/69dfd4f274139ef1f533c646711db84902b0cfe4)
-and changes only a handful of files:
+You need a **stock-clock HP 200LX**, DOS on the internal drive or CF-backed DOS
+volume, and a way to copy files to the palmtop's `C:` drive.
 
-| File | Change |
-| --- | --- |
-| `elks/init/main.c` | Poll the Newton UART from the idle loop after `schedule()`; reclaim conventional RAM above the ramdisk via `seg_add()`. |
-| `elks/arch/i86/kernel/system.c` | Cap `memend` at the ramdisk start instead of subtracting the ramdisk size from the BIOS top. |
-| `elks/arch/i86/kernel/irqtab.S` | `idle_halt`: `hlt` → `sti; ret` (busy idle, since no interrupts arrive). |
-| `elks/arch/i86/drivers/char/kbd-poll.c` | Newton keyboard COM-power/UART init, make/break decoder, keymap, and the idle/capture poll routines. |
-| `configs/hp200lx_newton.config` | The kernel `.config` used for this build (BIOS console, no XMS/HMA, RAM-root, FAT off). |
+1. Download [`hp200lx-release2.zip`](releases/hp200lx-release2.zip) from this
+   repository and unzip it. You get a `hp200lx-release2/` folder.
+2. Copy **all** files from that folder to `C:\ELKS` on the HP 200LX. Back up or
+   rename any existing `C:\ELKS` first.
+3. From DOS on the 200LX:
 
-## Install (run Release 1 on an HP 200LX)
+   ```dos
+   C:
+   CD \ELKS
+   RUNN59
+   ```
 
-You need a **stock-clock HP 200LX**, an **Apple Newton keyboard** (`X0035LL/A`)
-with the serial cable described below, and a way to copy files to the palmtop's
-`C:` drive.
+4. ELKS boots. When the shell prompt appears, type on the built-in HP 200LX
+   keyboard.
 
-1. Download `elks-hp200lx-v1-newton-N24.zip` from the
-   [Release 1](https://github.com/l00nix/elks-on-hp200lx/releases) page and
-   unzip it. You get a `FIRSTTEST_NEWTON_N24/` folder.
-2. Copy **all** files from that folder to `C:\ELKS` on the HP 200LX. *(Back up
-   or rename any existing `C:\ELKS` first — this writes onto the DOS `C:` volume
-   and may overwrite files in that directory.)*
-3. Wire the Newton keyboard to the serial port (K. Adachi's `NTKPAC05` cabling:
-   HP-F1015A → mini-DIN 8, 3-wire — Newton pin 1→DTR, pin 4→GND, pin 5→RXD).
-4. From DOS on the 200LX: `cd \ELKS` then `RUNN24`.
-5. ELKS boots; when the shell prompt appears, type on the Newton keyboard.
-
-To **uninstall**, boot back to DOS and remove or rename `C:\ELKS`. This release
-runs entirely through the DOS loader chain from that directory — it does not
+To uninstall, boot back to DOS and remove or rename `C:\ELKS`. This release
+runs entirely through the DOS loader chain from that directory. It does not
 repartition the drive or install a boot loader, so there is nothing else to
 undo.
 
-To build from source instead, see `configs/hp200lx_newton.config` and the build
-recipe in [`docs/hp200lx/build_newton_n24.sh`](docs/hp200lx/build_newton_n24.sh).
+The package includes the boot helpers and images needed by the DOS boot chain:
+
+| File | Purpose |
+| --- | --- |
+| `RUNN59.BAT` | Tested DOS entry point for Release 2. |
+| `KERNBOP` | ELKS kernel image from the N59 internal-keyboard build. |
+| `ROOT092` | RAM-root minix filesystem image. |
+| `CARDIO.EXE` | HP 200LX card/RAM-disk loader helper from the MINIX-on-200LX boot chain. |
+| `PUT13.EXE` | INT 13h handler loader helper. |
+| `MKINTS.COM` | Captures interrupt vectors for the loader path. |
+| `BTGVDX.COM` | DOS loader used to launch the ELKS image. |
+| `VECT13.DAT` | DEBUG script used by the boot chain. |
+
+---
+
+## How it works (the key ideas)
+
+### 1. DOS loader chain inherited from the MINIX-on-200LX work
+
+The HP 200LX can be made to boot a non-DOS system from DOS by using the loader
+chain descended from Richard Dubs' MINIX-on-HP-200LX work. The release package
+uses that path to prepare the RAM-root image and launch the ELKS kernel.
+
+This keeps Release 2 non-destructive: it runs from `C:\ELKS` and returns to DOS
+on reboot.
+
+### 2. BIOS console
+
+Release 2 uses the BIOS console path, which is a good match for the HP 200LX
+display hardware. The goal for this release is a reliable text shell on the
+real palmtop, not direct framebuffer ownership.
+
+### 3. Idle-loop polling
+
+The HP 200LX does not behave like a normal PC/XT with a standard keyboard
+controller and timer path. Earlier testing showed that relying on normal
+interrupt-driven keyboard input was not sufficient.
+
+Instead, the HP 200LX input path is polled from the kernel idle loop and
+decoded keystrokes are pushed into the console tty queue:
+
+```text
+idle loop -> HP 200LX scanner -> Console_conin() -> tty input queue -> shell
+```
+
+This avoids depending on missing or incompatible PC keyboard interrupts.
+
+### 4. Direct HP 200LX keyboard matrix scanner
+
+Release 2 uses a direct scanner for the HP 200LX keyboard matrix. During the
+N24-N59 bring-up series, the key matrix was mapped as tuple values and then
+translated into ELKS console input.
+
+The final breakthrough was in the N58/N59 scanner:
+
+- Modifier artifacts are filtered out as non-feedable key candidates.
+- The scanner selects the first tuple that can actually produce console input.
+- Held Shift and held Ctrl are recognized while a normal key is pressed.
+- A one-shot fallback is retained for cases where the hardware scanning cadence
+  reports modifier state separately from the following key.
+
+That combination gives normal shell typing behavior on real HP 200LX hardware.
+
+### 5. RAM-root memory-map fix
+
+The DOS loader preloads the RAM-root image at a fixed segment, but stock ELKS
+assumed a more conventional memory layout. The HP 200LX build caps the process
+pool below the RAM-root start so `fork()` does not corrupt the filesystem image.
+
+This is why shell commands such as `ls`, `cat`, and small external programs can
+run without destabilizing the root filesystem.
+
+---
+
+## What changed vs upstream ELKS
+
+The exact source branch for Release 2 should be named separately from the older
+external-keyboard branch, for example `hp200lx-internal-keyboard` or
+`hp200lx-release2`.
+
+At a high level, Release 2 changes are in the same small group of HP 200LX
+bring-up areas:
+
+| Area | Change |
+| --- | --- |
+| Kernel idle loop | Poll HP 200LX input from the idle loop and feed the console tty queue. |
+| Keyboard driver | Add direct HP 200LX matrix scanner and tuple-to-character map. |
+| Modifier handling | Support held Shift/Ctrl plus a one-shot fallback for hardware timing edge cases. |
+| Memory map | Keep process memory from overlapping the RAM-root image. |
+| Console config | Use BIOS console and a RAM-root minix filesystem. |
+| Build config | Add/maintain an HP 200LX-specific kernel configuration. |
+
+Suggested release branch/tag naming:
+
+```text
+branch: hp200lx-internal-keyboard
+tag:    hp200lx-release-2
+title:  Release 2 - Internal Keyboard
+```
+
+---
 
 ## Roadmap
 
-- **Get the built-in HP 200LX keyboard working** (the #1 goal — the unit isn't
-  self-contained until this works). Apply the same idle-loop polling to the BIOS
-  keyboard buffer; if that path is also blocked, revive a periodic tick via an
-  `Int 0Ah` hook (which would also restore `jiffies`, kernel timers, and the
-  stock keyboard path).
-- Harden / stress-test the reclaimed high memory.
-- Move the root onto the internal C: drive (free the RAM and the PCMCIA slot for
-  networking).
-- Double-speed unit support (Hornet clock setup).
-- Fold the HP 200LX quirks into a proper platform layer with `/bootopts`
-  toggles.
+- Clean up the HP 200LX keyboard scanner into a maintainable platform-specific
+  driver.
+- Document the final tuple map and include a keyboard diagram in `docs/hp200lx`.
+- Investigate persistent PCMCIA/CF hard-disk support from inside ELKS.
+- Review the HP 200LX BIOS/video functions for display zoom, contrast, inverse
+  video, and related key combinations.
+- Harden and stress-test memory behavior under heavier process pressure.
+- Review double-speed HP 200LX units separately; Release 2 was tested on a
+  stock-clock unit.
+- Decide which parts can be proposed upstream and which should remain in this
+  downstream hardware fork.
 
-See [`docs/hp200lx/STRATEGY.md`](docs/hp200lx/STRATEGY.md) for details.
+---
 
 ## Credits
 
-- [ELKS](https://github.com/ghaerr/elks) and its authors — the kernel this
+- [ELKS](https://github.com/ghaerr/elks) and its authors - the kernel this
   builds on (GPLv2).
-- **Richard L. Dubs** — the MINIX-on-HP-200LX work that this DOS boot/loader
-  chain descends from. Release 1 **directly reuses** his `CARDIO` card/RAM-disk
-  loader binary ("Copyright (C) 1998 Richard L. Dubs") and the `INT13`/`PUT13`
-  INT 13h RAM-disk handler binaries that let the palmtop load and run a non-DOS
-  kernel + ramdisk image. See his notes
-  ([archived](https://web.archive.org/web/20010428164137/http://users.erols.com/rld/),
-  [MINIX.TXT](https://web.archive.org/web/20010428164137/http://users.erols.com/rld/MINIX.TXT))
-  and the related **dosminix** project
-  ([archived](https://web.archive.org/web/20040924083657/http://minix.technoir.org/)).
-- **K. Adachi** — the `NTKPAC05` DOS Newton-keyboard driver whose wiring and
-  protocol this reuses.
-- **Stefan Peichl** — `DSPEED.COM`, the double-speed HP 200LX clock driver
-  referenced for crystal-upgraded units.
+- **Greg Haerr** and the ELKS community - for the upstream project and discussion
+  in [ghaerr/elks#2236](https://github.com/ghaerr/elks/issues/2236).
+- **Richard L. Dubs** - the MINIX-on-HP-200LX work that this DOS boot/loader
+  chain descends from; see the archived
+  [`l00nix/dubs-minix-repo`](https://github.com/l00nix/dubs-minix-repo).
+- The HP 100LX/200LX Developer's Guide and HP 200LX user documentation - for
+  the low-level keyboard, BIOS, and display details.
+- The [`l00nix/gentleos-hp200lx`](https://github.com/l00nix/gentleos-hp200lx)
+  work - for prior evidence that the internal HP 200LX keyboard can be driven
+  directly.
+- All real-hardware testing in this repo was done on an HP 200LX with 4 MB RAM
+  and a DOS/FAT storage setup.
