@@ -118,15 +118,34 @@ R3D4 keeps the same BIOSHD kernel content and no-pause launcher, but uses the na
 
 This tests whether the R3D3 copy/jump stop was caused by the post-build file pad rather than the BIOSHD probe itself.
 
+R3D4 test result:
+
+- The boot stopped at the same `Press key for quiet copy/jump` line.
+- Since the file padding was removed, the stop is not explained by trailing post-build bytes.
+- The leading hypothesis is now that enabling BIOSHD pushed the kernel image over a 64 KiB boundary that the current BootELKS/BTGVDX copy/jump path does not survive.
+
+## R3D5 Diagnostic
+
+R3D5 keeps the same DOS-side INT13 relocation sequence but trims the BIOSHD kernel below 64 KiB:
+
+- `KERNBOP` size: 65024 bytes
+- loader phase: 0
+- `CONFIG_BLK_DEV_BHD=y`
+- `CONFIG_IDE_PROBE` disabled
+- Release 2 HP 200LX internal keyboard scanner retained
+- nonessential pseudo-tty, TCP, parallel, and PS/2 mouse pieces removed for size
+
+This tests whether the R3D2/R3D3/R3D4 stop was a loader/copy cliff caused by the image crossing 64 KiB.
+
 ## Test Notes to Capture
 
-When testing `RUNR3D4`, record:
+When testing `RUNR3D5`, record:
 
 - Whether `CHK80.DBG` shows vector `00 00 00 80`.
 - The first 16 bytes dumped from `8000:0000`.
 - Whether it gets past `Press key for quiet copy/jump`.
 - Whether ELKS still boots to the shell.
-- Any `R3D2 bioshd:` lines during boot.
+- Whether the internal keyboard still works.
 - Whether any ELKS command can see hard-disk devices, for example `fdisk -l` if available.
 
 ## Open Questions
