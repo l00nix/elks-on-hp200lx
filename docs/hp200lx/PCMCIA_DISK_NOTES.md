@@ -137,16 +137,45 @@ R3D5 keeps the same DOS-side INT13 relocation sequence but trims the BIOSHD kern
 
 This tests whether the R3D2/R3D3/R3D4 stop was a loader/copy cliff caused by the image crossing 64 KiB.
 
+R3D5 test result:
+
+- The trimmed BIOSHD kernel booted into the ELKS shell.
+- This strongly supports the theory that the R3D2/R3D3/R3D4 hang was caused by the BIOSHD-enabled kernel crossing a loader/copy boundary near 64 KiB.
+- `fdisk -l` still failed with `Error opening /dev/hda`.
+- That means BIOSHD still did not expose a usable `/dev/hda`; either the INT13 hard-disk parameter probe found zero hard disks, or `/dev/hda` remained invalid at open time.
+
+## PCMCIA / ATA-CF Finding
+
+This ELKS tree does not appear to include a native PCMCIA/Card Services stack. Storage paths relevant to the HP 200LX are:
+
+- BIOS INT13 hard disk support: `CONFIG_BLK_DEV_BHD`
+- direct ATA-CF support: `CONFIG_BLK_DEV_ATA_CF`
+
+For the HP 200LX, the likely model is still that DOS-side `CARDIO` initializes the PCMCIA socket and maps the CF card into ATA-compatible I/O space before ELKS starts. ELKS can then either call a BIOS/INT13 handler or try talking to the ATA ports directly.
+
+## R3D6 Diagnostic
+
+R3D6 tests the direct ATA-CF path:
+
+- `CONFIG_BLK_DEV_BHD` disabled
+- `CONFIG_BLK_DEV_ATA_CF` enabled
+- ATA mode forced to standard ATA mode at ports `0x1f0/0x3f6`
+- Dubs INT13 handler not loaded or relocated
+- `CARDIO` still runs before ELKS
+- `KERNBOP` size: 65464 bytes
+
+Because BIOSHD is disabled in this diagnostic, `/dev/hda` is not the target device. Test `/dev/cfa` instead.
+
 ## Test Notes to Capture
 
-When testing `RUNR3D5`, record:
+When testing `RUNR3D6`, record:
 
-- Whether `CHK80.DBG` shows vector `00 00 00 80`.
-- The first 16 bytes dumped from `8000:0000`.
 - Whether it gets past `Press key for quiet copy/jump`.
 - Whether ELKS still boots to the shell.
+- Any boot lines beginning with `cf`.
 - Whether the internal keyboard still works.
-- Whether any ELKS command can see hard-disk devices, for example `fdisk -l` if available.
+- The exact output of `fdisk -l /dev/cfa`.
+- If needed, the exact output of `fdisk /dev/cfa`.
 
 ## Open Questions
 
