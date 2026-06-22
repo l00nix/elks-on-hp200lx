@@ -166,11 +166,51 @@ R3D6 tests the direct ATA-CF path:
 
 Because BIOSHD is disabled in this diagnostic, `/dev/hda` is not the target device. Test `/dev/cfa` instead.
 
+R3D6/R3D7 loader follow-up:
+
+- R3D6 appeared to hang during boot. Its package intentionally had fewer files
+  than earlier diagnostics because it removed the Dubs INT13 helper chain, but
+  its image phase was suspect.
+- R3D7 kept the same direct ATA-CF idea, restored the alternate loader in the
+  package, and changed image layout while staying below 64 KiB.
+- R3D7 got past the loader and printed:
+
+```text
+rd: 360K ramdisk at 3200:0000
+```
+
+then hung.
+
+That stop point is past the DOS loader and into ELKS block-device init. The
+leading hypothesis is that the upstream ATA-CF driver's `delay_10ms()` and
+`ata_wait()` use `jiffies()` for timeouts. On the HP 200LX, kernel timer ticks
+do not advance in this boot path, so an ATA reset delay or busy wait can spin
+forever.
+
+## R3D8 Diagnostic
+
+R3D8 keeps the R3D6/R3D7 direct ATA-CF configuration but removes the jiffies
+dependency from the ATA-CF probe path:
+
+- `CONFIG_BLK_DEV_BHD` disabled
+- `CONFIG_BLK_DEV_ATA_CF` enabled
+- ATA mode forced to standard ATA mode at ports `0x1f0/0x3f6`
+- `ata.c` `delay_10ms()` replaced with a bounded CPU loop
+- `ata.c` `ata_wait()` replaced with a bounded port-poll loop
+- Timeout should print:
+
+```text
+cf: wait timeout st=XX
+```
+
+This should turn the R3D7 post-ramdisk hang into either a visible ATA-CF
+probe result or a clean boot to shell.
+
 ## Test Notes to Capture
 
-When testing `RUNR3D6`, record:
+When testing `RUNR3D8`, record:
 
-- Whether it gets past `Press key for quiet copy/jump`.
+- Whether it gets past the `rd: 360K ramdisk at 3200:0000` line.
 - Whether ELKS still boots to the shell.
 - Any boot lines beginning with `cf`.
 - Whether the internal keyboard still works.
