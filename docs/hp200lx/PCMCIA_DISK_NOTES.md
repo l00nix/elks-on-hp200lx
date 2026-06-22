@@ -63,18 +63,44 @@ Expected `CHK80.DBG` output:
 8000:0000  <non-zero handler bytes>
 ```
 
-If ELKS then boots normally and the BIOS disk path sees the CF card, the 0x9000 overwrite theory is likely correct.
+R3D1 test result:
 
-If ELKS still does not see the disk, the next step is to instrument ELKS disk probing to determine whether INT13 returns an error, hangs, or is not being called for the expected drive number.
+- `CHK80.DBG` showed the INT13 vector repointed to `8000:0000`.
+- ELKS still booted to the shell, so the DOS-side relocation did not break the boot path.
+- `fdisk -l` still failed with `Error opening /dev/hda`.
+
+This did not disprove the 0x9000 overwrite theory, but it showed that the Release 2 kernel could not test the BIOS hard-disk path because it was built without the BIOS hard disk block driver.
+
+## R3D2 Diagnostic
+
+R3D2 keeps the R3D1 DOS-side INT13 relocation and changes the kernel:
+
+- `CONFIG_BLK_DEV_BHD=y`
+- `CONFIG_IDE_PROBE` remains disabled
+- `arch/i86/drivers/block/bios.c` prints small `R3D2 bioshd:` diagnostics around the INT13 AH=08 hard-disk parameter probe
+
+The R3D2 kernel grew enough to land on an unproven BootELKS file phase. The linked kernel was therefore built at phase 40 and padded with 8 trailing zero bytes in the DOS package so the file presented to BootELKS lands at phase 48, the same proven phase used by Release 2. No kernel bytes were truncated.
+
+R3D2 expected observations:
+
+- ELKS should still boot to the shell.
+- Boot output should include `R3D2 bioshd:` lines.
+- `fdisk -l` should be tested again.
+
+Useful outcomes:
+
+- If `R3D2 bioshd:` reports a plausible drive count and `/dev/hda` appears, the BIOS INT13 path is viable.
+- If the probe reports an INT13 error or zero drives, the relocated handler may not be sufficient or may not support the ELKS call pattern.
+- If the system hangs during the probe, the next diagnostic should avoid automatic BIOSHD registration and use a smaller manual INT13 test path.
 
 ## Test Notes to Capture
 
-When testing `RUNR3D1`, record:
+When testing `RUNR3D2`, record:
 
 - Whether `CHK80.DBG` shows vector `00 00 00 80`.
 - The first 16 bytes dumped from `8000:0000`.
 - Whether ELKS still boots to the shell.
-- Whether any disk/probe output changes during boot.
+- Any `R3D2 bioshd:` lines during boot.
 - Whether any ELKS command can see hard-disk devices, for example `fdisk -l` if available.
 
 ## Open Questions
@@ -83,4 +109,3 @@ When testing `RUNR3D1`, record:
 - Does the Dubs handler expect to remain at `0x9000`, or is it position-independent enough to run at `0x8000`?
 - Does `CARDIO` leave the CF card mapped to ATA-compatible I/O ports after ELKS starts?
 - Does ELKS need a direct PCMCIA/ATA driver instead of relying on the BIOS/INT13 path?
-
