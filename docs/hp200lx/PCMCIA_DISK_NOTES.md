@@ -93,12 +93,22 @@ Useful outcomes:
 - If the probe reports an INT13 error or zero drives, the relocated handler may not be sufficient or may not support the ELKS call pattern.
 - If the system hangs during the probe, the next diagnostic should avoid automatic BIOSHD registration and use a smaller manual INT13 test path.
 
+R3D2 test result:
+
+- The vector check still showed `0000:004c` pointing to `8000:0000`.
+- The boot did not reach ELKS. It stopped at the DOS `PAUSE` line in `RUNR3D2.BAT` after `CHK80.DBG`.
+
+## R3D3 Diagnostic
+
+R3D3 keeps the R3D2 kernel and DOS INT13 relocation sequence unchanged, but removes the DOS `PAUSE` after `CHK80.DBG`. This tests whether the stop was only the launcher pause rather than the BIOSHD probe kernel.
+
 ## Test Notes to Capture
 
-When testing `RUNR3D2`, record:
+When testing `RUNR3D3`, record:
 
 - Whether `CHK80.DBG` shows vector `00 00 00 80`.
 - The first 16 bytes dumped from `8000:0000`.
+- Whether it gets past the previous pause point.
 - Whether ELKS still boots to the shell.
 - Any `R3D2 bioshd:` lines during boot.
 - Whether any ELKS command can see hard-disk devices, for example `fdisk -l` if available.
