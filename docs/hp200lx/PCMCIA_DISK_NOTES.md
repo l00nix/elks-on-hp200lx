@@ -765,6 +765,41 @@ R3D20B.BAT  run CARDIO, capture CARDIOB.TXT, then run SSSETB
 R3D20C.BAT  run CARDIO, relocate Dubs INT13 to 8000:0000, then run SSSETC
 ```
 
+R3D20 test result:
+
+- The defensive logger worked; all three `SSSET?.TXT` files contained output.
+- All three variants reported `CF=1 AX=0B00` for every Socket Services call.
+- `CARDIOB.TXT` and `CARDIOC.TXT` contained only the normal CARDIO banner and
+  no printed CARDIO error messages.
+- The port samples still read as repeated `3B` at `1F0-1F7` and `3F6`, except
+  for one unstable single-byte `53` in variant B.
+
+The apparent contradiction between CARDIO reporting no error and `SSSET`
+reporting errors led to a closer disassembly of `CARDIO.EXE`. The previous
+probe had byte-swapped several fields when translating Borland `union REGS`
+stores into raw register values.
+
+Corrected values from the `CARDIO.EXE` disassembly:
+
+```text
+SetSocket:    AX=8E00 BX=8001 CX=0111 DX=0000 SI=0002 DI=8005
+SetWindow 9:  AX=8900 BX=0901 CX=0008 DX=0501 SI=01F0
+SetWindow 10: AX=8900 BX=0A01 CX=0002 DX=0501 SI=03F6
+```
+
+## R3D21 Diagnostic
+
+R3D21 reruns the Socket Services return-code probe using the corrected
+register values above.
+
+Three 8.3-safe batch files are provided:
+
+```text
+R3D21A.BAT  run SSSETA directly, without CARDIO first
+R3D21B.BAT  run CARDIO, capture CARDIOB.TXT, then run SSSETB
+R3D21C.BAT  run CARDIO, relocate Dubs INT13 to 8000:0000, then run SSSETC
+```
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
