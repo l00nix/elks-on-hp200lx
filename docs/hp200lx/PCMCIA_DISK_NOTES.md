@@ -330,13 +330,73 @@ R3D12 is the corrected version of R3D11:
 
 The desired test artifact is the corrected `IODUMP.TXT`.
 
+R3D12 test result:
+
+- `IODUMP.TXT` was successfully created and copied back.
+- The corrected dump looked internally valid: bytes at `3f8-3ff` resembled a
+  real serial UART register block, which confirms the dumper was reading real
+  port values.
+- The likely ATA/CF candidate ranges were still mostly the repeated `3B`
+  background/open-bus value:
+
+```text
+1f0-1ff  mostly 3B
+170-17f  mostly 3B, with one 53
+300-31f  mostly 3B, with one 63 at 300
+320-33f  mostly 3B, with one 63
+180-19f  mostly 3B, with two 63 bytes
+200-25f  all 3B in the sampled windows
+```
+
+This strongly suggests that after `CARDIO`, the CF card is not exposed as a
+simple ATA I/O window at any of the tested standard, secondary, XTCF, or common
+PCMCIA-style candidate ranges. The direct ELKS ATA-CF path is therefore less
+promising than the Dubs INT13 path.
+
+## R3D13 Diagnostic
+
+R3D13 is a DOS-side INT13 capability probe. It does not boot ELKS.
+
+It writes `I13DUMP.TXT` and tests:
+
+- the current INT13 vector
+- BIOS fixed disk count at `0040:0075`
+- INT13 `AH=00` reset
+- INT13 `AH=08` drive parameters
+- INT13 `AH=15` disk type
+- INT13 `AH=41` extensions check
+- INT13 `AH=02` read of CHS `0/0/1`
+
+The bundle includes three variants:
+
+```text
+RUNR3D13A.BAT  CARDIO, then probe current/default INT13
+RUNR3D13B.BAT  CARDIO, PUT13 at 9000:0000, then probe INT13
+RUNR3D13C.BAT  CARDIO, PUT13 copied to 8000:0000, then probe INT13
+```
+
+Useful outcomes:
+
+- If `AH=02` can read sector 0 but `AH=08` fails, then the Dubs handler may be
+  usable for raw reads but not for ELKS BIOSHD autodetection. A manual geometry
+  fallback in ELKS BIOSHD may be needed.
+- If `AH=08` and `AH=02` both work through the 8000 handler, then the next ELKS
+  diagnostic should instrument why `CONFIG_BLK_DEV_BHD` did not register
+  `/dev/hda`.
+- If the 9000 handler works but the 8000 copy does not, then the handler is not
+  position-independent and cannot simply be moved below ELKS setup relocation.
+- If none of the variants can read drive `80h`, the Dubs path may require a
+  different precondition than `CARDIO` + `PUT13`, or the card may only be
+  available through DOS-level services rather than BIOS INT13.
+
 ## Test Notes to Capture
 
-When testing `RUNR3D12`, record or copy:
+When testing `RUNR3D13`, record or copy:
 
-- `IODUMP.TXT`
-- whether `RUNR3D12.BAT` runs successfully after `CARDIO`
-- a photo of the output only if copying `IODUMP.TXT` is inconvenient
+- `I13DUMP.TXT` after each variant
+- which variant was run (`A`, `B`, or `C`)
+- whether any variant hangs
+- a photo of the output only if copying `I13DUMP.TXT` is inconvenient
 
 ## Open Questions
 
