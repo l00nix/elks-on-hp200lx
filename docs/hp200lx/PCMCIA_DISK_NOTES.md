@@ -619,6 +619,67 @@ Expected useful outcomes:
 - If status shows `DRQ` and data is readable, the next step is to compare the
   direct probe command sequence with the Dubs INT13 handler sequence.
 
+R3D17 test result:
+
+- The user rebooted the HP 200LX between variants `A`, `B`, and `C`, which is a
+  good clean-state test method for this work.
+- None of the variants hung.
+- All variants showed the same suspicious initial register pattern at the Dubs
+  handler's hard-coded ATA window:
+
+```text
+Initial 1F0-1F7: 3B 3B 3B 3B 3B 3B 3B 3B   3F6: 3B
+```
+
+- `IDENTIFY EC` and `READ 20 C0/H0/S1` both ended with status `3B`, and the
+  first 32 bytes read from the data port were also all `3B`.
+- Variants with the Dubs INT13 handler installed or relocated did not change
+  this pattern.
+- This strongly suggests that the CF card is not actually visible at `1F0` in
+  this test setup. A real ATA register window should not read as the same byte
+  in every register before and after commands.
+
+## R3D18 Diagnostic
+
+R3D18 is a read-only I/O window scan. It does not issue ATA commands; it only
+samples candidate I/O ranges to see whether `CARDIO` makes any plausible ATA
+register block appear somewhere other than `1F0`.
+
+Three 8.3-safe batch files are provided:
+
+```text
+R3D18A.BAT  scan before CARDIO
+R3D18B.BAT  CARDIO, then scan
+R3D18C.BAT  CARDIO + Dubs INT13 copied to 8000:0000, then scan
+```
+
+Each variant writes a distinct output file:
+
+```text
+IOSCANA.TXT
+IOSCANB.TXT
+IOSCANC.TXT
+```
+
+The scan records the BIOS fixed-disk count at `0040:0075`, then reads these
+candidate base windows:
+
+```text
+1F0, 170, 1E8, 168, 180, 100, 120, 140, 160,
+200, 220, 240, 300, 320, 340, 360
+```
+
+For each base it samples `base+0` through `base+7`, plus the corresponding
+alternate-status/control port.
+
+Useful outcomes:
+
+- A base that changes after `CARDIO` is the most interesting candidate.
+- A base whose registers are not all the same byte is more plausible than the
+  repeated `3B` seen at `1F0`.
+- If a plausible base appears, the next diagnostic should target only that base
+  with bounded `IDENTIFY` and `READ` commands.
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
