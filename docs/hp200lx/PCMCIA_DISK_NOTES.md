@@ -538,6 +538,87 @@ When testing `R3D16`, record or copy:
 - the last visible line if a variant hangs
 - a photo of the output only if copying `I13R81.TXT` is inconvenient
 
+R3D16 test result:
+
+- `R3D16A` used the stock INT13 vector `0070:0809`; the `DL=81` read returned
+  `CF=1 AH=80`.
+- `R3D16B` installed the Dubs INT13 handler at `9000:0000`; the first handler
+  bytes were:
+
+```text
+E9 BE 02 00 02 00 00 00 00 00 00 00 00 F0 01 06
+```
+
+- `R3D16C` copied the same handler to `8000:0000`; the first handler bytes
+  matched the `9000:0000` copy.
+- With the PCMCIA/CF card inserted, both `R3D16B` and `R3D16C` stopped at:
+
+```text
+About to call INT13 AH=02 DL=81 C0/H0/S1
+```
+
+- After removing the PCMCIA/CF card, both tests returned and wrote output.
+  They reported `CF=0 AH=01`, but the first 32 bytes of the destination buffer
+  were all `53`.
+- This is not a valid sector read. The useful conclusion is that the Dubs
+  handler is present and entered, but it appears to wait indefinitely for ATA
+  status while the card is inserted. Once the card is removed, the handler
+  returns with floating/invalid bus data.
+
+## R3D17 Diagnostic
+
+R3D17 avoids INT13 reads and probes the Dubs/CardIO ATA port path directly with
+bounded polling. This should identify which ATA status transition is missing
+without hanging forever in the Dubs INT13 handler.
+
+The bundle includes:
+
+```text
+CARDIO.EXE
+PUT13.EXE
+INT13.BIN
+VECT13.DAT
+COPY80.DAT
+VECT80.DAT
+ATADMPA.COM
+ATADMPB.COM
+ATADMPC.COM
+BIOS512.EXE
+```
+
+Three 8.3-safe batch files are provided:
+
+```text
+R3D17A.BAT  CARDIO, then bounded direct ATA probe
+R3D17B.BAT  CARDIO, PUT13 + INT13.BIN at 9000:0000, then bounded direct ATA probe
+R3D17C.BAT  CARDIO, PUT13 + INT13.BIN copied to 8000:0000, then bounded direct ATA probe
+```
+
+Each variant writes a distinct output file:
+
+```text
+ATADMPA.TXT
+ATADMPB.TXT
+ATADMPC.TXT
+```
+
+The direct probe records:
+
+- initial values read from `1F0-1F7` and `3F6`
+- the status trace while selecting the drive
+- a bounded `IDENTIFY` command (`EC`)
+- a bounded sector read command (`20`) for `C0/H0/S1`
+- the first 32 data bytes only if the card asserts DRQ
+
+Expected useful outcomes:
+
+- If status at `1F7` remains stuck with `BSY` set, the Dubs handler hang is
+  explained by its unbounded busy-wait loop.
+- If status never shows `DRQ`, the card is not reaching the ATA data-transfer
+  phase at the Dubs/CardIO port mapping.
+- If status shows `DRQ` and data is readable, the next step is to compare the
+  direct probe command sequence with the Dubs INT13 handler sequence.
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
