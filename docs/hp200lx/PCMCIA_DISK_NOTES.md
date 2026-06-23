@@ -310,12 +310,32 @@ Ranges dumped:
 
 The desired test artifact is the text file `IODUMP.TXT` copied back from DOS.
 
+R3D11 test result:
+
+- `IODUMP.TXT` was successfully created.
+- The output showed a suspicious repeated `3B` pattern across nearly all dumped
+  ports, with occasional `63`/`53` bytes.
+- Reviewing `IODUMP.ASM` found a bug: the hex-print helper clobbered `DX`,
+  which is also the I/O port register used by `in al, dx`.
+- Therefore only the first byte of each dumped range should be considered
+  trustworthy.
+
+## R3D12 Diagnostic
+
+R3D12 is the corrected version of R3D11:
+
+- same DOS-side `CARDIO` then `IODUMP.COM` sequence
+- `IODUMP.COM` now preserves `DX` while printing hex bytes
+- expected output file remains `IODUMP.TXT`
+
+The desired test artifact is the corrected `IODUMP.TXT`.
+
 ## Test Notes to Capture
 
-When testing `RUNR3D11`, record or copy:
+When testing `RUNR3D12`, record or copy:
 
 - `IODUMP.TXT`
-- whether `RUNR3D11.BAT` runs successfully after `CARDIO`
+- whether `RUNR3D12.BAT` runs successfully after `CARDIO`
 - a photo of the output only if copying `IODUMP.TXT` is inconvenient
 
 ## Open Questions
