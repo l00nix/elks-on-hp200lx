@@ -485,15 +485,58 @@ Useful outcomes:
   position-independent and will need to be loaded directly at a safe address
   rather than copied after the fact.
 
+R3D15 test result:
+
+- The `R3D15C` screenshot showed the INT13 vector correctly set to
+  `8000:0000`.
+- The first bytes at `8000:0000` were real handler code:
+
+```text
+B9 8E 02 00 02 00 00 00 00 00 00 00 F0 01 ...
+```
+
+- This confirms that adding `INT13.BIN` allowed `PUT13` to install the real
+  Dubs INT13 payload and that the `COPY80.DAT`/`VECT80.DAT` relocation path
+  copied it to `8000:0000`.
+- The probe then stopped at:
+
+```text
+About to call INT13 AH=02 DL=80 C0/H0/S1
+```
+
+- Therefore the real handler is entered for `DL=80`, but that direct read call
+  did not return in this test.
+
+## R3D16 Diagnostic
+
+R3D16 repeats the R3D15 direct-read probe but uses `DL=81` instead of `DL=80`.
+
+Reason: Dubs' `BIOS512.C` test tool uses:
+
+```c
+biosdisk(2, 0x81, head, cylinder, sector, 1, buffer);
+```
+
+while `WINI200.C` defaults to `0x80`. Since the existing `DL=80` direct read
+hangs after entering the real handler, `DL=81` is the next least-invasive test.
+
+Three 8.3-safe batch files are provided:
+
+```text
+R3D16A.BAT  CARDIO, then probe current/default INT13 with DL=81
+R3D16B.BAT  CARDIO, PUT13 + INT13.BIN at 9000:0000, then DL=81 read
+R3D16C.BAT  CARDIO, PUT13 + INT13.BIN copied to 8000:0000, then DL=81 read
+```
+
 ## Test Notes to Capture
 
-When testing `R3D15`, record or copy:
+When testing `R3D16`, record or copy:
 
-- `I13RD.TXT` after each variant
+- `I13R81.TXT` after each variant
 - which variant was run (`A`, `B`, or `C`)
 - whether any variant hangs
 - the last visible line if a variant hangs
-- a photo of the output only if copying `I13RD.TXT` is inconvenient
+- a photo of the output only if copying `I13R81.TXT` is inconvenient
 
 ## Open Questions
 
