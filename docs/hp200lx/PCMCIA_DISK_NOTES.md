@@ -800,6 +800,59 @@ R3D21B.BAT  run CARDIO, capture CARDIOB.TXT, then run SSSETB
 R3D21C.BAT  run CARDIO, relocate Dubs INT13 to 8000:0000, then run SSSETC
 ```
 
+R3D21 test result:
+
+- All three corrected Socket Services calls returned success:
+
+```text
+INT1A SetSocket AH=8E CF=0 AX=8E00 BX=8001 CX=0111 DX=0000 SI=0002 DI=8005
+INT1A SetWindow09 base=1F0 size=8 CF=0 AX=8900 BX=0901 CX=0008 DX=0501 SI=01F0 DI=8005
+INT1A SetWindow0A base=3F6 size=2 CF=0 AX=8900 BX=0A01 CX=0002 DX=0501 SI=03F6 DI=8005
+```
+
+- Despite successful host-side socket/window setup, `1F0-1F7` and `3F6` still
+  read as repeated `3B`.
+- This strongly suggests the host I/O windows are being configured, but the
+  card itself is not responding as an ATA I/O device at those addresses.
+
+The HP Developer Guide's PCMCIA chapter matches this result. It states that a
+plug-in card returns to its default memory-card state on insertion/power-on and
+that software must write configuration data to the card's attribute memory in
+order to enable I/O mode. Only after that does `SetSocket`/`SetWindow` create a
+useful I/O path.
+
+## R3D22 Diagnostic
+
+R3D22 logs the missing pre-window stage: the CardBIOS call made by `CARDIO.EXE`
+before the Socket Services calls.
+
+Disassembly of `CARDIO.EXE` shows a single CardBIOS request packet copied from
+its data segment:
+
+```text
+10 09 01 00 00 00 01 00 00 01 00 00 00 00 00 00
+```
+
+`CARDIO.EXE` then calls:
+
+```text
+AX=B000
+ES:BX -> 16-byte CardBIOS request packet
+INT 1A
+```
+
+R3D22 replays that visible sequence and logs the packet bytes before and after
+the call, the carry flag and registers returned by CardBIOS, and the `1F0/3F6`
+port state after CardBIOS and after Socket Services.
+
+Three 8.3-safe batch files are provided:
+
+```text
+R3D22A.BAT  run CBSETA directly, without CARDIO first
+R3D22B.BAT  run CARDIO, capture CARDIOB.TXT, then run CBSETB
+R3D22C.BAT  run CARDIO, relocate Dubs INT13 to 8000:0000, then run CBSETC
+```
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
