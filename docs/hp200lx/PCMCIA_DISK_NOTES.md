@@ -436,9 +436,58 @@ Useful outcomes:
 - If the vector/handler bytes are wrong before the read, the DOS-side
   installation sequence must be fixed before returning to ELKS.
 
+R3D14 test result:
+
+- `R3D14A` returned from the default BIOS INT13 handler with `CF=1 AH=80`, again
+  confirming the stock BIOS/DOS INT13 path does not expose the CF card.
+- `R3D14B` and `R3D14C` showed the INT13 vector correctly set to `9000:0000`
+  and `8000:0000`, respectively.
+- However, the first bytes at those vector targets were zeros rather than real
+  handler code.
+- Reviewing the Dubs archive showed why: `PUT13.EXE` requires a separate
+  payload file named `INT13.BIN`, and the ELKS diagnostic/release bundles had
+  included `PUT13.EXE` but not `INT13.BIN`.
+- Therefore previous `PUT13`-based diagnostics did not actually install the
+  Dubs INT13 handler, even when the INT13 vector itself was changed.
+
+## R3D15 Diagnostic
+
+R3D15 repeats the R3D14 direct-read probe but includes the missing
+`INT13.BIN` from the Dubs archive.
+
+The bundle includes:
+
+```text
+CARDIO.EXE
+PUT13.EXE
+INT13.BIN
+VECT13.DAT
+COPY80.DAT
+VECT80.DAT
+I13RD.COM
+```
+
+Three 8.3-safe batch files are provided:
+
+```text
+R3D15A.BAT  CARDIO, then probe current/default INT13 direct read
+R3D15B.BAT  CARDIO, PUT13 + INT13.BIN at 9000:0000, then direct read
+R3D15C.BAT  CARDIO, PUT13 + INT13.BIN copied to 8000:0000, then direct read
+```
+
+Useful outcomes:
+
+- `R3D15B` should show non-zero handler bytes at `9000:0000`.
+- `R3D15C` should show the same handler bytes copied to `8000:0000`.
+- If either variant returns from `AH=02` with `CF=0`, then the Dubs INT13
+  read path is viable and ELKS can be adjusted around it.
+- If `9000:0000` works but `8000:0000` fails, the handler is likely not
+  position-independent and will need to be loaded directly at a safe address
+  rather than copied after the fact.
+
 ## Test Notes to Capture
 
-When testing `R3D14`, record or copy:
+When testing `R3D15`, record or copy:
 
 - `I13RD.TXT` after each variant
 - which variant was run (`A`, `B`, or `C`)
