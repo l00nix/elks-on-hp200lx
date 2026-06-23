@@ -389,14 +389,62 @@ Useful outcomes:
   different precondition than `CARDIO` + `PUT13`, or the card may only be
   available through DOS-level services rather than BIOS INT13.
 
+R3D13 test result:
+
+- `R3D13A.BAT` produced `I13DUMP.TXT`.
+- The default BIOS/DOS INT13 path returned `CF=1 AH=80` for reset, parameters,
+  disk type, extensions check, and sector read on drives `80h`, `81h`, and
+  `00h`. That means the stock path does not expose the PCMCIA/CF card as an
+  INT13 fixed disk after `CARDIO`.
+- `R3D13B.BAT` and `R3D13C.BAT` both appeared to stop immediately after
+  printing `Drive DL=80`.
+- Reviewing `I13DUMP.ASM` found that the INT13 vector and BDA disk count
+  printouts were wrong: the code switched `DS` to low memory and then stored
+  the results through that low-memory segment instead of restoring `DS` first.
+  The actual INT13 call results from `R3D13A` remain useful, but the printed
+  vector/BDA lines do not.
+- The stop point in `R3D13B/C` is likely the first INT13 call made by the
+  probe, `AH=00` reset. The Dubs handler may not implement reset/parameter
+  services, or may not tolerate the call sequence used by the probe.
+
+## R3D14 Diagnostic
+
+R3D14 is a narrower DOS-side INT13 direct-read probe:
+
+- fixes the R3D13 INT13 vector/BDA print bug
+- prints the true INT13 vector
+- prints the first 16 bytes at the active INT13 vector
+- skips `AH=00`, `AH=08`, `AH=15`, and `AH=41`
+- tries only one read-only sector read: `INT13 AH=02`, `DL=80`, CHS `0/0/1`
+
+The bundle includes three 8.3-safe batch files:
+
+```text
+R3D14A.BAT  CARDIO, then probe current/default INT13 direct read
+R3D14B.BAT  CARDIO, PUT13 at 9000:0000, then direct read
+R3D14C.BAT  CARDIO, PUT13 copied to 8000:0000, then direct read
+```
+
+Useful outcomes:
+
+- If `R3D14B` or `R3D14C` reads sector 0 successfully, the Dubs handler likely
+  supports raw reads but not the reset/geometry calls used by normal BIOSHD
+  probing.
+- If the screen shows a valid `9000:0000` or `8000:0000` vector and handler
+  bytes, then hangs at `About to call INT13 AH=02`, the Dubs handler is entered
+  but does not complete even for a direct read in this setup.
+- If the vector/handler bytes are wrong before the read, the DOS-side
+  installation sequence must be fixed before returning to ELKS.
+
 ## Test Notes to Capture
 
-When testing `R3D13`, record or copy:
+When testing `R3D14`, record or copy:
 
-- `I13DUMP.TXT` after each variant
+- `I13RD.TXT` after each variant
 - which variant was run (`A`, `B`, or `C`)
 - whether any variant hangs
-- a photo of the output only if copying `I13DUMP.TXT` is inconvenient
+- the last visible line if a variant hangs
+- a photo of the output only if copying `I13RD.TXT` is inconvenient
 
 ## Open Questions
 
