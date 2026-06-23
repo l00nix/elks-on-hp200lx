@@ -680,6 +680,65 @@ Useful outcomes:
 - If a plausible base appears, the next diagnostic should target only that base
   with bounded `IDENTIFY` and `READ` commands.
 
+R3D18 test result:
+
+- All three variants reported the BIOS fixed-disk count at `0040:0075` as
+  `00`.
+- The Dubs hard-coded ATA window stayed unmapped-looking in every variant:
+
+```text
+base 01F0 regs: 3B 3B 3B 3B 3B 3B 3B 3B  alt 03F6 = 3B
+```
+
+- The alternate candidate windows also mostly read as repeated `3B`.
+- A few one-byte differences appeared in different places between runs
+  (`63`, `BB`, `53`), but they were not stable across variants and did not
+  form an ATA-like register block.
+- This means `CARDIO` did not make a stable ATA register window visible at
+  `1F0/3F6` or at any of the common alternate windows scanned by R3D18.
+
+## R3D19 Diagnostic
+
+R3D19 shifts from port probing to Socket Services return-code probing.
+
+Disassembly of `CARDIO.EXE` shows that it uses `INT 1Ah` Socket Services calls
+with these constants:
+
+```text
+SetSocket:    AX=8E00 BX=0180 CX=1101 DX=0000 SI=0002 DI=8005
+SetWindow 9:  AX=8900 BX=0109 CX=0008 DX=0501 SI=01F0
+SetWindow 10: AX=8900 BX=010A CX=0002 DX=0501 SI=03F6
+```
+
+Those calls are intended to configure the HP 200LX PCMCIA I/O windows so that
+the card appears as an ATA device at `1F0-1F7` with alternate status/control at
+`3F6`.
+
+The R3D19 `SSSET` probe calls the same Socket Services functions and logs:
+
+- the carry flag and output `AX/BX/CX/DX/SI/DI` after each call
+- the BIOS fixed-disk count at `0040:0075`
+- `1F0-1F7` and `3F6` before and after the calls
+
+Three 8.3-safe batch files are provided:
+
+```text
+R3D19A.BAT  run SSSETA directly, without CARDIO first
+R3D19B.BAT  run CARDIO, capture CARDIOB.TXT, then run SSSETB
+R3D19C.BAT  run CARDIO, relocate Dubs INT13 to 8000:0000, then run SSSETC
+```
+
+Expected interpretation:
+
+- If a Socket Services call reports carry set or an error code, the problem is
+  likely at the PCMCIA socket/window setup layer.
+- If the calls report success but `1F0/3F6` still read as repeated `3B`, then
+  the socket/window setup alone is not enough. The missing piece may be ATA
+  card attribute/configuration setup before the I/O window becomes active.
+- If the calls report success and the register block changes to plausible ATA
+  values, the next step is to retry a bounded ATA `IDENTIFY` immediately after
+  the successful setup sequence.
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
