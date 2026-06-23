@@ -739,6 +739,32 @@ Expected interpretation:
   values, the next step is to retry a bounded ATA `IDENTIFY` immediately after
   the successful setup sequence.
 
+R3D19 test result:
+
+- The `SSSET?.TXT` files came back as zero-byte files.
+- This likely means the diagnostic created/truncated the output file but did
+  not successfully close it with logged data after running the Socket Services
+  calls.
+
+## R3D20 Diagnostic
+
+R3D20 supersedes R3D19 with the same Socket Services call sequence but a more
+defensive logger:
+
+- At program start, the output file is created/truncated.
+- Each emitted text fragment is then appended through a fresh
+  open/seek-to-end/write/close cycle.
+- This is intentionally slower, but it should preserve partial output even if
+  a later Socket Services call stalls or exits oddly.
+
+The R3D20 batch-file matrix is the same as R3D19:
+
+```text
+R3D20A.BAT  run SSSETA directly, without CARDIO first
+R3D20B.BAT  run CARDIO, capture CARDIOB.TXT, then run SSSETB
+R3D20C.BAT  run CARDIO, relocate Dubs INT13 to 8000:0000, then run SSSETC
+```
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
