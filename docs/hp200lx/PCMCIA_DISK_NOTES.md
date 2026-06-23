@@ -237,9 +237,43 @@ XTCF-style port mapping instead of standard `0x1f0/0x3f6`. This tests whether
 the 200LX/CardIO combination exposes the CF card on the alternate port path
 that ELKS already knows how to probe.
 
+R3D9 test result:
+
+- ELKS booted to the shell.
+- `fdisk -l /dev/cfa` failed with `Error opening /dev/cfa`.
+- The ATA-CF probe still used standard ATA:
+
+```text
+cfa: ATA at 1f0/3f6 xtide=0,0 not found (-6)
+cfb: ATA at 1f0/3f6 xtide=0,0 not found (-6)
+```
+
+That means AUTO did not select XTCF on this build. The likely reason is that
+the kernel reports the HP 200LX as PC/AT class CPU 5, while upstream ATA-CF
+AUTO only chooses XTCF when `arch_cpu < CPU_80286`.
+
+## R3D10 Diagnostic
+
+R3D10 is the same direct ATA-CF path as R3D9, but with ATA-CF mode forced to
+XTCF:
+
+- `CONFIG_BLK_DEV_BHD` disabled
+- `CONFIG_BLK_DEV_ATA_CF` enabled
+- ATA mode forced to `3`
+- R3D8/R3D9 no-jiffies ATA delay/wait fix retained
+
+Expected boot line:
+
+```text
+cfa: ATA at 300/31c xtide=3,1 ...
+```
+
+If this still does not find the card, the next step should be a raw I/O port
+dump/scanner after `CARDIO` rather than guessing more ATA-CF modes.
+
 ## Test Notes to Capture
 
-When testing `RUNR3D9`, record:
+When testing `RUNR3D10`, record:
 
 - Whether the boot lines mention `xtide=3,1` or another `xtide` value.
 - Whether ELKS still boots to the shell.
