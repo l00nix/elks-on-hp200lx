@@ -370,9 +370,9 @@ It writes `I13DUMP.TXT` and tests:
 The bundle includes three variants:
 
 ```text
-RUNR3D13A.BAT  CARDIO, then probe current/default INT13
-RUNR3D13B.BAT  CARDIO, PUT13 at 9000:0000, then probe INT13
-RUNR3D13C.BAT  CARDIO, PUT13 copied to 8000:0000, then probe INT13
+R3D13A.BAT  CARDIO, then probe current/default INT13
+R3D13B.BAT  CARDIO, PUT13 at 9000:0000, then probe INT13
+R3D13C.BAT  CARDIO, PUT13 copied to 8000:0000, then probe INT13
 ```
 
 Useful outcomes:
@@ -391,7 +391,7 @@ Useful outcomes:
 
 ## Test Notes to Capture
 
-When testing `RUNR3D13`, record or copy:
+When testing `R3D13`, record or copy:
 
 - `I13DUMP.TXT` after each variant
 - which variant was run (`A`, `B`, or `C`)
