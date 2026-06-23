@@ -271,17 +271,52 @@ cfa: ATA at 300/31c xtide=3,1 ...
 If this still does not find the card, the next step should be a raw I/O port
 dump/scanner after `CARDIO` rather than guessing more ATA-CF modes.
 
+R3D10 test result:
+
+- ELKS booted to the shell.
+- `fdisk -l /dev/cfa` failed with `Error opening /dev/cfa`.
+- The ATA-CF probe did move to the forced XTCF path:
+
+```text
+cfa: ATA at 300/31c xtide=3,0 not found
+cfb: ATA at 300/31c xtide=3,0 not found
+```
+
+This means both known ELKS ATA-CF paths have missed the card:
+
+- standard ATA: `1f0/3f6`, `xtide=0,0`
+- forced XTCF: `300/31c`, `xtide=3,0`
+
+The next diagnostic should therefore happen before ELKS starts probing the ATA
+device.
+
+## R3D11 Diagnostic
+
+R3D11 is a DOS-side raw I/O dump:
+
+- run `CARDIO`
+- run `IODUMP.COM`
+- write the result to `IODUMP.TXT`
+
+This avoids ELKS and dumps likely ATA/PCMCIA I/O windows immediately after
+`CARDIO` configures the card.
+
+Ranges dumped:
+
+- `1f0-1ff`, `3f0-3ff`
+- `170-17f`, `370-37f`
+- `300-31f`, `320-33f`
+- `180-19f`, `200-21f`, `220-23f`, `240-25f`
+
+The desired test artifact is the text file `IODUMP.TXT` copied back from DOS.
+
 ## Test Notes to Capture
 
-When testing `RUNR3D10`, record:
+When testing `RUNR3D11`, record or copy:
 
-- Whether the boot lines mention `xtide=3,1` or another `xtide` value.
-- Whether ELKS still boots to the shell.
-- Any boot lines beginning with `cf`.
-- Any `cf: wait timeout st=XX` status byte.
-- Whether the internal keyboard still works.
-- The exact output of `fdisk -l /dev/cfa`.
-- If needed, the exact output of `fdisk /dev/cfa`.
+- `IODUMP.TXT`
+- whether `RUNR3D11.BAT` runs successfully after `CARDIO`
+- a photo of the output only if copying `IODUMP.TXT` is inconvenient
 
 ## Open Questions
 
