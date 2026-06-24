@@ -1108,6 +1108,69 @@ R3D27C.BAT  I63T27C.TXT
 If a run hangs, the last visible breadcrumb should identify whether the
 failure is in DOS logging or the Int 63h call itself.
 
+R3D27 test result:
+
+- `R3D27A.BAT` completed the DOS/file logging baseline.
+- `R3D27B.BAT` completed the Int 63h memory-map save-size call:
+
+```text
+After Int63, AX=0013
+```
+
+- `R3D27C.BAT` completed the Int 63h XIP save-size call:
+
+```text
+After Int63, AX=000A
+```
+
+This is a useful narrowing result. Int 63h itself is callable from DOS, and
+the returned sizes match the HP Developer Guide expectations: 19 bytes for the
+memory page-map save array and 10 bytes for the XIP page-map save array. That
+means the R3D26 hang was probably not caused by the presence of Int 63h or by
+basic DOS logging. The next test should split page mapping into smaller stages.
+
+## R3D28 Diagnostic
+
+R3D28 is a staged Int 63h page-map test that deliberately does not read from
+the mapped memory window. This separates "the map call hangs" from "touching
+the mapped page hangs."
+
+The test matrix is:
+
+```text
+R3D28A.BAT  save current page map only, no map call
+R3D28B.BAT  save map, map NCS0 logical page 0 to E000, restore map
+R3D28C.BAT  save map, map NCS0 logical page 0 to D000, restore map
+```
+
+Expected output files:
+
+```text
+R3D28A.BAT  I63M28A.TXT
+R3D28B.BAT  I63M28B.TXT
+R3D28C.BAT  I63M28C.TXT
+```
+
+BIOS teletype breadcrumbs:
+
+```text
+S?0  program started
+1    DOS output file was created and initial text was logged
+2    AX=0103 memory-map save-size returned
+3    AX=0100 save page-map returned
+4    AH=00 map call returned; about to restore the saved map
+```
+
+Useful interpretations:
+
+- If A hangs, the save-map call (`AX=0100`) or output-file path is the problem.
+- If A completes but B or C hangs before breadcrumb `4`, the Int 63h `AH=00`
+  page-map call itself is unsafe with that physical page/device selection.
+- If B or C prints `4` but hangs afterward, restoring the saved page map
+  (`AX=0101`) is the unsafe operation.
+- If B or C completes, the next diagnostic can carefully read a few bytes from
+  the mapped window after adding before/after restore breadcrumbs.
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
