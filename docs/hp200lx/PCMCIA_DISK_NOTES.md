@@ -912,6 +912,69 @@ variant changes `1F0-1F7` or `3F6` away from the repeated `3B` pattern, the
 next step should be a bounded direct ATA `IDENTIFY`/sector-read probe using
 that exact setup sequence.
 
+R3D23 test result:
+
+- All three variants returned CardBIOS success:
+
+```text
+INT1A CardBIOS AX=B000 ES:BX=packet CF=0 AX=0000
+```
+
+- The patched packet before and after the call remained:
+
+```text
+10 09 01 00 00 00 01 00 00 01 00 00 00 06 04 3C 07
+```
+
+- The corrected Socket Services calls still returned success.
+- Despite that, `1F0-1F7` and `3F6` still read as the repeated `3B`
+  background value after CardBIOS and after Socket Services.
+- One run showed a single unstable `63` byte at `1F3` after CardBIOS only,
+  but the port block returned to all `3B` after Socket Services. This looks
+  like bus noise rather than a decoded ATA register.
+
+This confirms that the visible CardBIOS packet, even with the suspected
+patched data pointer, is still not enough to make the card decode at the ATA
+I/O ports. The next step is to stop guessing the CardBIOS packet and directly
+inspect PCMCIA common/attribute memory.
+
+## R3D24 Diagnostic
+
+R3D24 maps the plug-in card memory through the HP 200LX Hornet E-bank
+registers documented in the HP 100LX/200LX Developer's Guide.
+
+The diagnostic saves the existing Hornet bank and attribute-select registers,
+maps the plug-in slot into the `E000:0000` window, copies small samples into
+local RAM, restores the original Hornet registers, and only then writes the
+text dump. It does not call DOS while the E-bank window is remapped.
+
+The sampled views are:
+
+- common memory view at `E000:0000`
+- raw attribute memory view at `E000:0000`
+- even-byte extraction from the attribute memory view
+
+The test matrix is:
+
+```text
+R3D24A.BAT  NCS0 direct dump without CARDIO first
+R3D24B.BAT  CARDIO first, then NCS0 direct dump
+R3D24C.BAT  CARDIO first, then NCS1 direct dump test
+```
+
+Expected output files:
+
+```text
+R3D24A.BAT  CIS24A.TXT
+R3D24B.BAT  CARDIOB.TXT and CIS24B.TXT
+R3D24C.BAT  CARDIOC.TXT and CIS24C.TXT
+```
+
+What we want to see is a real PCMCIA CIS tuple stream, most likely in the
+attribute even-byte extraction. If that appears, the next diagnostic can parse
+the configuration tuple, find the Configuration Option Register address, and
+write the correct I/O-enable value deliberately.
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
