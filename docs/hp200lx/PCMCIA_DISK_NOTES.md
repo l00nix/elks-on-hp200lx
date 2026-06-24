@@ -1015,6 +1015,63 @@ If R3D25 still stalls, the partial `CIS25?.TXT` file should show whether it
 stopped before the common-memory capture, during the common-memory capture, or
 during the attribute-memory capture.
 
+R3D25 test result:
+
+- All three variants completed and closed their output files correctly.
+- The saved Hornet E-bank registers for variants A/B were:
+
+```text
+70 6F 6E 6D 6C 6B 6A 69 62: 04 04 04 04 04 04 04 04 00
+```
+
+- The common-memory view, raw attribute-memory view, and even-byte attribute
+  extraction all remained the repeated `3B` background value.
+- Variant C's final register readback differed (`1A` values), but the memory
+  views still remained `3B`.
+
+This means the raw Hornet E-bank register writes used by R3D24/R3D25 are not
+enough to expose the CF card's CIS. The HP Developer Guide warns that window
+state should normally be saved/restored using Int 63h page-map services, and
+that Socket Services does not fully describe windows that are also used by
+System ROM. The next diagnostic therefore uses Int 63h mapping rather than
+direct E-bank register writes.
+
+## R3D26 Diagnostic
+
+R3D26 uses the HP documented Int 63h memory mapping functions:
+
+```text
+AX=0103  get page-map save-array size
+AX=0100  save page map
+AH=00    map NCS0 logical page 0 to a CPU physical page
+AX=0101  restore page map
+```
+
+After mapping common memory, it temporarily flips the relevant Hornet
+attribute-select bit for that same bank and snapshots attribute memory. The
+page map is restored before the dump is written.
+
+The test matrix is:
+
+```text
+R3D26A.BAT  map NCS0 logical page 0 to E000 without CARDIO first
+R3D26B.BAT  CARDIO first, then map NCS0 logical page 0 to E000
+R3D26C.BAT  CARDIO first, then map NCS0 logical page 0 to D000
+```
+
+Expected output files:
+
+```text
+R3D26A.BAT  CIS26A.TXT
+R3D26B.BAT  CARDIOB.TXT and CIS26B.TXT
+R3D26C.BAT  CARDIOC.TXT and CIS26C.TXT
+```
+
+Key things to inspect are the Int 63h `AH=00` map status and whether the data
+changes away from `3B`. If the mapped attribute even-byte view contains CIS
+tuples, the next step is to parse the configuration tuple and write the
+correct I/O-enable value to the card configuration register.
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
