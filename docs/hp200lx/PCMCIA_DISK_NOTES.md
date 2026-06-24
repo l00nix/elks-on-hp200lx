@@ -975,6 +975,46 @@ attribute even-byte extraction. If that appears, the next diagnostic can parse
 the configuration tuple, find the Configuration Option Register address, and
 write the correct I/O-enable value deliberately.
 
+R3D24 test result:
+
+- The `CIS24?.TXT` output files came back as zero-byte files.
+- This likely means the program created/truncated the output file, then did
+  not reach the final DOS close after entering the risky Hornet E-bank remap
+  path.
+- Since R3D24 held the output file open until the very end, even the early
+  header text would not necessarily be visible if the program stalled before
+  closing the file.
+
+## R3D25 Diagnostic
+
+R3D25 keeps the same direct Hornet E-bank CIS/attribute-memory idea, but makes
+the logger more defensive:
+
+- every output fragment opens, appends, and closes the output file
+- the common-memory capture is reduced to 128 bytes
+- the attribute-memory capture is reduced to 512 bytes
+- each risky capture stage writes a breadcrumb before it starts
+
+The test matrix is:
+
+```text
+R3D25A.BAT  NCS0 direct dump without CARDIO first
+R3D25B.BAT  CARDIO first, then NCS0 direct dump
+R3D25C.BAT  CARDIO first, then NCS1 direct dump test
+```
+
+Expected output files:
+
+```text
+R3D25A.BAT  CIS25A.TXT
+R3D25B.BAT  CARDIOB.TXT and CIS25B.TXT
+R3D25C.BAT  CARDIOC.TXT and CIS25C.TXT
+```
+
+If R3D25 still stalls, the partial `CIS25?.TXT` file should show whether it
+stopped before the common-memory capture, during the common-memory capture, or
+during the attribute-memory capture.
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
