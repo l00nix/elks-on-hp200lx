@@ -853,6 +853,65 @@ R3D22B.BAT  run CARDIO, capture CARDIOB.TXT, then run CBSETB
 R3D22C.BAT  run CARDIO, relocate Dubs INT13 to 8000:0000, then run CBSETC
 ```
 
+R3D22 test result:
+
+- All three variants reported CardBIOS success:
+
+```text
+INT1A CardBIOS AX=B000 ES:BX=packet CF=0 AX=0000
+```
+
+- The packet bytes were unchanged by the call:
+
+```text
+10 09 01 00 00 00 01 00 00 01 00 00 00 00 00 00
+```
+
+- The corrected Socket Services calls still returned success.
+- Despite that, `1F0-1F7` and `3F6` stayed at the repeated `3B` background
+  value after CardBIOS and after Socket Services.
+
+This means the visible static packet plus the corrected Socket Services calls
+are still not enough to make the CF card decode as an ATA I/O device.
+
+Reviewing the `CARDIO.EXE` disassembly again showed that `CARDIO` does not
+appear to pass only the unmodified static packet. It copies the template and
+then patches the packet tail before the `AX=B000` call. The most likely
+interpretation is a far pointer to a one-byte configuration data buffer.
+
+## R3D23 Diagnostic
+
+R3D23 supersedes R3D22 by replaying the CardBIOS packet with the suspected
+patched tail:
+
+```text
+bytes 00-12  copied from the CARDIO.EXE template
+bytes 13-14  offset of a local one-byte data buffer
+bytes 15-16  segment of that local data buffer
+```
+
+The data byte is varied across the three test programs:
+
+```text
+R3D23A.BAT  patched CardBIOS packet, data byte 00
+R3D23B.BAT  CARDIO first, then patched packet, data byte 01
+R3D23C.BAT  CARDIO and Dubs INT13 relocation, then patched packet, data 02
+```
+
+Each variant writes distinct output files:
+
+```text
+R3D23A.BAT  CB23A.TXT
+R3D23B.BAT  CARDIOB.TXT and CB23B.TXT
+R3D23C.BAT  CARDIOC.TXT and CB23C.TXT
+```
+
+This diagnostic still does not issue ATA sector reads or writes. It only calls
+CardBIOS/Socket Services and samples the candidate ATA registers. If any
+variant changes `1F0-1F7` or `3F6` away from the repeated `3B` pattern, the
+next step should be a bounded direct ATA `IDENTIFY`/sector-read probe using
+that exact setup sequence.
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
