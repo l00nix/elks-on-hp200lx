@@ -1072,6 +1072,42 @@ changes away from `3B`. If the mapped attribute even-byte view contains CIS
 tuples, the next step is to parse the configuration tuple and write the
 correct I/O-enable value to the card configuration register.
 
+R3D26 partial test result:
+
+- `R3D26A.BAT` appears to hang immediately after the batch `echo` line.
+- The program should have printed its own title before the first Int 63h call,
+  so this needs a smaller smoke test before continuing with full page mapping.
+
+## R3D27 Diagnostic
+
+R3D27 is a tiny Int 63h smoke test with BIOS teletype breadcrumbs:
+
+```text
+S?0  program started
+1    DOS output file was created and initial text was logged
+2    just before the Int 63h call
+3    just after the Int 63h call returned
+```
+
+The test matrix is:
+
+```text
+R3D27A.BAT  DOS/file logging baseline only, no Int 63h call
+R3D27B.BAT  Int 63h AX=0103 memory-map save-size call
+R3D27C.BAT  Int 63h AX=8303 XIP save-size call
+```
+
+Expected output files:
+
+```text
+R3D27A.BAT  I63T27A.TXT
+R3D27B.BAT  I63T27B.TXT
+R3D27C.BAT  I63T27C.TXT
+```
+
+If a run hangs, the last visible breadcrumb should identify whether the
+failure is in DOS logging or the Int 63h call itself.
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
