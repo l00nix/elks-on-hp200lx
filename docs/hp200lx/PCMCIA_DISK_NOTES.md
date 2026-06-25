@@ -1527,6 +1527,89 @@ Expect DOS disk access to be unreliable after a run because the diagnostic may
 successfully move the CF card away from the DOS filesystem mode and into IDE
 I/O mode.
 
+R3D33 test result:
+
+- All three variants completed and returned to the DOS prompt.
+- Socket Services calls appeared successful. The screen showed `FLAGS=F246`
+  for the relevant calls, which has carry clear.
+- COR writes succeeded and read back the expected values:
+
+```text
+Primary IDE variants:   COR read=42
+Secondary IDE variant:  COR read=43
+```
+
+- FCSR changed from `81` to `A4` after the diagnostic ORed in `0x28`.
+- Initial ATA status after configuration showed plausible values:
+
+```text
+data ports included 0C then mostly 3B/open-looking bytes
+alt status was 50
+```
+
+- `IDENTIFY EC` reached `DRQ`/status `58` and returned identify data.
+- `READ 20 C0/H0/S1` also reached status `58` and returned a boot sector.
+  The first bytes included:
+
+```text
+EB 00 3C 00 90 00 4D 00 53 00 44 00 4F 00 53 00 ...
+```
+
+Interpreting the byte-wide output as low bytes of 16-bit ATA words gives:
+
+```text
+EB 3C 90 4D 53 44 4F 53 ...
+```
+
+That is a DOS boot sector beginning with `EB 3C 90` and `MSDOS`. This is the
+first direct proof that the CF card can be configured into IDE I/O mode and
+read with programmed ATA commands on the HP 200LX.
+
+## R3D34 Diagnostic
+
+R3D34 turns the R3D33 finding into a boot-chain test. It adds a small
+screen-only enabler:
+
+```text
+CFEN34.COM
+```
+
+`CFEN34.COM` performs the primary IDE configuration only:
+
+1. CardBIOS CIS read sanity check.
+2. Socket Services `SetSocket`.
+3. Socket Services `SetWindow` for `1F0-1F7`.
+4. Socket Services `SetWindow` for `3F6`.
+5. COR write/read at CardBIOS address `0x0100`, value `0x42`.
+6. FCSR read/write/read at `0x0101`, ORing in `0x28`.
+7. One ATA status line.
+
+It does not open or write any log file.
+
+The ELKS kernel and root image are carried forward from R3D8:
+
+- direct ATA-CF enabled
+- standard ATA ports `1F0/3F6`
+- bounded non-jiffies ATA wait path
+
+The test matrix is:
+
+```text
+RUNR34A.BAT  CFEN34, DIR KERNBOP, MKINTS, BTGVDX
+RUNR34B.BAT  CFEN34, DIR KERNBOP, MKINTS, BTGVD67
+RUNR34C.BAT  CARDIO, CFEN34, DIR KERNBOP, MKINTS, BTGVDX
+```
+
+Please try `RUNR34A.BAT` first.
+
+Useful outcomes:
+
+- If `DIR KERNBOP` fails after `CFEN34`, the CF card is no longer available to
+  DOS after configuration. The enabler code must move into the loader after
+  `KERNBOP` and `ROOT092` have already been read.
+- If the loader starts and ELKS boots, watch for `cfa:` and `cfb:` lines.
+- If `/dev/cfa` appears, run `fdisk -l /dev/cfa`.
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
