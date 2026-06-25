@@ -1391,6 +1391,106 @@ Useful interpretations:
   next lead is card power/configuration or the exact common-vs-attribute memory
   selection mechanism.
 
+R3D31 test result:
+
+- All three variants completed.
+- Int63 function `AH=02` reported the expected state transitions:
+
+```text
+before:  BX=FFFF DX=0000
+mapped:  BX=0000 DX=0005
+restore: BX=FFFF DX=0000
+```
+
+- This means the HP BIOS/Int63 abstraction believes physical page 08/E000 or
+  04/D000 is being mapped to NCS0 logical page 0.
+- The raw Hornet index/data register dump was not useful as a per-register
+  decode. Every probed bank register returned the same byte for a given state:
+
+```text
+E000 mapped: 04 04 04 ... ATTR=00
+D000 mapped: 1A 1A 1A ... ATTR=00
+attribute selected: all 10 for E000, all 01 for D000
+```
+
+This suggests the diagnostic's direct Hornet index/data read method is not a
+trustworthy register decoder in this context, even though the attribute-select
+bit itself can be changed. We should use CardBIOS/Socket Services rather than
+raw Hornet bank-register reads for the next step.
+
+## LxCic /T Finding
+
+Running `LXCIC /T` successfully produced a valid CIS dump for the CF card.
+
+Product tuple:
+
+```text
+SunDisk SDP 5/3 0.6
+```
+
+Important tuples:
+
+```text
+Tuple 21 = 04 01
+Tuple 1A = 01 07 00 02 0F
+Tuple 1B = C2 ... F0 01 07 F6 03 01 ...
+Tuple 1B = C3 ... 70 01 07 76 03 01 ...
+```
+
+Interpretation:
+
+- Function ID `04`: fixed disk / flash drive.
+- Config register tuple says the raw attribute-memory config-register base is
+  `0x0200`; the LxCic/CardBIOS write path uses `0x0100`.
+- Config table entry `C2` advertises primary IDE I/O windows:
+
+```text
+1F0-1F7 and 3F6
+```
+
+- Config table entry `C3` advertises secondary IDE I/O windows:
+
+```text
+170-177 and 376
+```
+
+This is the first clean confirmation from the card itself that standard IDE
+I/O windows are valid configurations. The direct ATA probes likely failed
+because the card was not fully configured into the matching COR/FCSR state, or
+because the Socket Services I/O window setup and COR/FCSR write sequence needs
+to be reproduced more exactly.
+
+## R3D32 Diagnostic
+
+R3D32 uses the CIS values directly instead of guessing.
+
+The diagnostic sequence is:
+
+1. Read the CIS through CardBIOS `INT 1Ah AX=B000h`.
+2. Call Socket Services `SetSocket` (`AX=8E00h`) for socket 1.
+3. Call Socket Services `SetWindow` (`AX=8900h`) for the advertised IDE I/O
+   windows.
+4. Write the COR at CardBIOS address `0x0100`.
+5. Read/write/read FCSR at CardBIOS address `0x0101`, ORing in `0x28`
+   for 8-bit I/O and audio/FCSR bit behavior as done by LxCic.
+6. Probe the resulting ATA status/data ports with bounded waits.
+
+The test matrix is:
+
+```text
+R3D32A.BAT  primary IDE 1F0/3F6, COR=42, no CARDIO
+R3D32B.BAT  CARDIO first, then primary IDE 1F0/3F6, COR=42
+R3D32C.BAT  secondary IDE 170/376, COR=43, no CARDIO
+```
+
+Expected output files:
+
+```text
+R3D32A.BAT  CF32A.TXT
+R3D32B.BAT  CARD32B.TXT and CF32B.TXT
+R3D32C.BAT  CF32C.TXT
+```
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
