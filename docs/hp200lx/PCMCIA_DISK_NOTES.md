@@ -1242,6 +1242,82 @@ Useful interpretations:
 - If a run completes but the 32 bytes are still all `3B` or all `FF`, the page
   may be mapped but not to the CF card's CIS/common memory.
 
+R3D29 test result:
+
+- All three runs completed, including the small mapped read and map restore.
+- The mapped reads were stable and non-`3B`, but did not resemble a PCMCIA CIS
+  tuple stream.
+- E000 without `CARDIO` and E000 after `CARDIO` were identical:
+
+```text
+0C 00 00 E5 00 00 E0 50 0C 00 00 00 00 00 50 7E
+0C 00 00 E5 00 00 E0 50 0C 00 00 00 00 00 50 7E
+```
+
+- D000 after `CARDIO` was nearly the same, with one repeated byte changed:
+
+```text
+0C 00 00 E5 00 00 E0 50 0C 80 00 00 00 00 50 7E
+0C 00 00 E5 00 00 E0 50 0C 80 00 00 00 00 50 7E
+```
+
+Because the E000 result did not change after `CARDIO`, this looks more like a
+fixed memory mapping or alias than the configured card tuple space. The HP
+Developer Guide says that non-RAM cards expose attribute memory, and the CIS
+should be in that attribute-memory view. R3D30 therefore repeats the small read
+while explicitly selecting the attribute-memory view for the mapped bank.
+
+## R3D30 Diagnostic
+
+R3D30 maps the same page as R3D29 but reads both common and attribute views:
+
+```text
+R3D30A.BAT  map/read E000 common+attribute without CARDIO
+R3D30B.BAT  CARDIO, then map/read E000 common+attribute
+R3D30C.BAT  CARDIO, then map/read D000 common+attribute
+```
+
+The attribute-memory select masks follow the HP Developer Guide's Hornet
+register description:
+
+```text
+E0 attribute select bit: 0x10
+D0 attribute select bit: 0x01
+```
+
+Expected output files:
+
+```text
+R3D30A.BAT  I63A30A.TXT
+R3D30B.BAT  CARD30B.TXT and I63A30B.TXT
+R3D30C.BAT  CARD30C.TXT and I63A30C.TXT
+```
+
+BIOS teletype breadcrumbs:
+
+```text
+S?0  program started
+1    output file was created and initial text logged
+2    save-size and save-map calls returned
+3    map call returned
+C    about to copy 32 common-memory bytes
+4    common copy returned
+A    about to select attribute memory and copy 64 bytes
+5    attribute copy returned
+6    saved page map was restored; file logging resumes
+```
+
+Useful interpretations:
+
+- If common matches R3D29 but attribute starts with recognizable CIS bytes
+  such as `01`, `1A`, or other PCMCIA tuple IDs, we can move on to tuple
+  parsing and configuration-register discovery.
+- If common and attribute are identical, the attribute-select bit is not
+  affecting this mapped window, so we need a different CardBIOS/Socket
+  Services path to CIS.
+- If attribute hangs, the bank select is valid but the attribute-memory access
+  path is still unsafe or incomplete.
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
