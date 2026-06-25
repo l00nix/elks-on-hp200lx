@@ -1171,6 +1171,77 @@ Useful interpretations:
 - If B or C completes, the next diagnostic can carefully read a few bytes from
   the mapped window after adding before/after restore breadcrumbs.
 
+R3D28 test result:
+
+- All three runs completed.
+- `AX=0103` returned `0013`.
+- `AX=0100` returned `0000` and saved 19 zero bytes for the current page-map
+  state.
+- Mapping NCS0 logical page 0 to E000 returned:
+
+```text
+Int63 AH=00 map NCS0 logical0 AX=0008 BX=0000 DX=0005
+```
+
+- Mapping NCS0 logical page 0 to D000 returned:
+
+```text
+Int63 AH=00 map NCS0 logical0 AX=0004 BX=0000 DX=0005
+```
+
+- Restoring the saved page map returned `AX=0001`.
+
+The `AH=00` byte in these return values looks like success, with `AL` left as
+the requested physical page or restore subfunction value. This strongly
+suggests the R3D26 failure was not the Int 63h map call itself. The next step
+is to touch a very small mapped memory window, then restore the page map before
+doing any DOS file I/O.
+
+## R3D29 Diagnostic
+
+R3D29 is the first cautious mapped-memory read test. Each variant maps NCS0
+logical page 0, copies only 32 bytes from the mapped physical segment into a
+local buffer, restores the saved page map, and only then logs the buffer to
+disk.
+
+The test matrix is:
+
+```text
+R3D29A.BAT  map/read E000 without CARDIO
+R3D29B.BAT  CARDIO, then map/read E000
+R3D29C.BAT  CARDIO, then map/read D000
+```
+
+Expected output files:
+
+```text
+R3D29A.BAT  I63R29A.TXT
+R3D29B.BAT  CARD29B.TXT and I63R29B.TXT
+R3D29C.BAT  CARD29C.TXT and I63R29C.TXT
+```
+
+BIOS teletype breadcrumbs:
+
+```text
+S?0  program started
+1    output file was created and initial text logged
+2    save-size and save-map calls returned
+3    map call returned
+R    about to copy 32 bytes from the mapped segment
+4    mapped 32-byte copy returned
+5    saved page map was restored; file logging resumes
+```
+
+Useful interpretations:
+
+- If a run reaches `3` but not `R`, the branch around map success or screen
+  output is suspect.
+- If a run reaches `R` but not `4`, reading the mapped segment is hanging.
+- If a run reaches `4` but not `5`, the restore call after a real memory read
+  is hanging.
+- If a run completes but the 32 bytes are still all `3B` or all `FF`, the page
+  may be mapped but not to the CF card's CIS/common memory.
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
