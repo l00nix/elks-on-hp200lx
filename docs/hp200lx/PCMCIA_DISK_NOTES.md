@@ -1491,6 +1491,42 @@ R3D32B.BAT  CARD32B.TXT and CF32B.TXT
 R3D32C.BAT  CF32C.TXT
 ```
 
+R3D32 test result:
+
+- All three variants appeared to run, but `CF32A.TXT`, `CF32B.TXT`, and
+  `CF32C.TXT` remained 0 bytes.
+- `CARD32B.TXT` was written correctly because it was created by the separate
+  `CARDIO > CARD32B.TXT` command before the CF configuration probe started.
+
+This is likely a diagnostic design problem rather than a useful card result.
+The probe opened a log file on the CF card, then reconfigured that same
+PCMCIA/CF card into IDE I/O mode. If the CF card is the DOS filesystem, the
+socket/COR work can make DOS lose the disk underneath the open file handle.
+
+## R3D33 Diagnostic
+
+R3D33 repeats the R3D32 CIS-driven configuration sequence but removes all file
+logging from the COM program. It prints to the screen only.
+
+The test matrix is:
+
+```text
+R3D33A.BAT  primary IDE 1F0/3F6, COR=42, no CARDIO
+R3D33B.BAT  CARDIO first, then primary IDE 1F0/3F6, COR=42
+R3D33C.BAT  secondary IDE 170/376, COR=43, no CARDIO
+```
+
+Expected artifacts:
+
+```text
+R3D33B.BAT  CARD33B.TXT if the pre-probe CARDIO redirection succeeds
+all runs     screen photos of the probe output
+```
+
+Expect DOS disk access to be unreliable after a run because the diagnostic may
+successfully move the CF card away from the DOS filesystem mode and into IDE
+I/O mode.
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
