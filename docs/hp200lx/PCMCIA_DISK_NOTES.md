@@ -1318,6 +1318,79 @@ Useful interpretations:
 - If attribute hangs, the bank select is valid but the attribute-memory access
   path is still unsafe or incomplete.
 
+R3D30 test result:
+
+- All three variants completed.
+- The attribute selector register changed and restored as expected:
+
+```text
+R3D30A/R3D30B E000: 00 -> 10 -> 00
+R3D30C        D000: 00 -> 01 -> 00
+```
+
+- However, common and attribute reads were identical in all variants.
+- The even bytes from the attribute view did not resemble a PCMCIA CIS tuple
+  stream.
+- The E000 result was still identical with and without `CARDIO`.
+
+This means we can manipulate the Hornet attribute-select bit, but the mapped
+window still does not appear to be the CF card's attribute memory. The next
+question is whether Int63 `AH=00` is actually programming the Hornet bank
+registers for NCS0, or whether it is returning success while leaving us mapped
+to some existing ROM/RAM alias.
+
+## R3D31 Diagnostic
+
+R3D31 avoids mapped-memory reads and instead snapshots the Hornet bank
+registers around the Int63 mapping call:
+
+```text
+R3D31A.BAT  map NCS0 logical0 to E000 without CARDIO
+R3D31B.BAT  CARDIO, then map NCS0 logical0 to E000
+R3D31C.BAT  CARDIO, then map NCS0 logical0 to D000
+```
+
+Expected output files:
+
+```text
+R3D31A.BAT  I63G31A.TXT
+R3D31B.BAT  CARD31B.TXT and I63G31B.TXT
+R3D31C.BAT  CARD31C.TXT and I63G31C.TXT
+```
+
+The register order in each `I63G31?.TXT` file is:
+
+```text
+D0R0 D0R1 D1R0 D1R1 D2R0 D2R1 D3R0 D3R1
+E0R0 E0R1 E1R0 E1R1 E2R0 E2R1 E3R0 E3R1 ATTR
+```
+
+It records:
+
+- Int63 `AX=0103` save-array size
+- Int63 `AX=0100` save-map status
+- Int63 `AH=02` mapping state before the map
+- Hornet bank registers before the map
+- Int63 `AH=00` map status
+- Hornet bank registers after the map
+- Int63 `AH=02` mapping state after the map
+- Hornet bank registers after setting the attribute-select bit
+- Int63 `AX=0101` restore status
+- Hornet bank registers after restore
+
+Useful interpretations:
+
+- For E000 variants, `E0R1` is the most important byte. If Int63 maps NCS0
+  into E000, `E0R1` should show an enabled NCS0 bank, expected in the shape of
+  `0D` for `FS1=0`, enabled, chip-select `101`.
+- For the D000 variant, `D0R1` is the equivalent byte.
+- If Int63 function `AH=02` claims the page is mapped to device select `0005`
+  but the Hornet register does not show NCS0, the BIOS abstraction is not
+  touching the expected physical bank.
+- If the bank registers do show NCS0 but the memory bytes remain non-CIS, the
+  next lead is card power/configuration or the exact common-vs-attribute memory
+  selection mechanism.
+
 ## Open Questions
 
 - Does ELKS call BIOS INT13 for `0x80` on this configuration?
