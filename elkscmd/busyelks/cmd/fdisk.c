@@ -355,7 +355,7 @@ char *devname;
 
     if (devname!=NULL) {
 	if ((pFd=open(devname,O_RDONLY))==-1) {
-	    printf("Error opening %s (%d)\n",devname,-pFd);
+	    printf("Error opening %s errno=%d\n",devname,errno);
 	    exit(1);
 	}
 	if ((i=read(pFd,ptbl,512))!=512) {
@@ -443,7 +443,7 @@ fdisk_main(int argc, char * argv[])
 	int flag=0;
 
 	if ((pFd=open(dev,O_RDWR))==-1) {
-	    printf("Error opening %s (%d)\n",dev,-pFd);
+	    printf("Error opening %s errno=%d\n",dev,errno);
 	    return 1;
 	}
 

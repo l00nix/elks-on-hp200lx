@@ -6,7 +6,7 @@ include $(BASEDIR)/Makefile-rules
 
 ###############################################################################
 
-PRGS = ramdisk mkfs mkfat fsck partype fdisk df
+PRGS = ramdisk mkfs mkfat fsck partype fdisk df cfprobe ataprobe
 
 all: $(PRGS)
 
@@ -21,6 +21,12 @@ fsck: fsck.o
 
 fdisk: fdisk.o $(TINYPRINTF)
 	$(LD) $(LDFLAGS) -o fdisk fdisk.o $(TINYPRINTF) $(LDLIBS)
+
+cfprobe: cfprobe.o $(TINYPRINTF)
+	$(LD) $(LDFLAGS) -o cfprobe cfprobe.o $(TINYPRINTF) $(LDLIBS)
+
+ataprobe: ataprobe.o $(TINYPRINTF)
+	$(LD) $(LDFLAGS) -o ataprobe ataprobe.o $(TINYPRINTF) $(LDLIBS)
 
 mkfs: mkfs.o $(TINYPRINTF)
 	$(LD) $(LDFLAGS) -o mkfs mkfs.o $(TINYPRINTF) $(LDLIBS)

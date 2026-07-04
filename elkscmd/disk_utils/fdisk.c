@@ -355,7 +355,7 @@ void list_partition(char *devname)
 
     if (devname!=NULL) {
         if ((fd=open(devname,O_RDONLY))==-1) {
-            printf("Error opening %s\n",devname);
+            printf("Error opening %s errno=%d\n", devname, errno);
             exit(1);
         }
         if ((i=read(fd,table,512))!=512) {
@@ -439,7 +439,7 @@ int main(int argc, char **argv)
         char buf[CMDLEN];
 
         if ((pFd = open(dev, O_RDWR)) < 0) {
-            printf("Error opening %s (%d)\n", dev, errno);
+            printf("Error opening %s errno=%d\n", dev, errno);
             return 1;
         }
         if (fstat(pFd, &stat) < 0 || !S_ISBLK(stat.st_mode) ||

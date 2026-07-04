@@ -1616,3 +1616,953 @@ Useful outcomes:
 - Does the Dubs handler expect to remain at `0x9000`, or is it position-independent enough to run at `0x8000`?
 - Does `CARDIO` leave the CF card mapped to ATA-compatible I/O ports after ELKS starts?
 - Does ELKS need a direct PCMCIA/ATA driver instead of relying on the BIOS/INT13 path?
+
+## R3D34 Test Results
+
+Observed on the HP 200LX:
+
+- `RUNR34A.BAT` booted into the ELKS shell.
+- `RUNR34C.BAT` booted into the ELKS shell.
+- `RUNR34B.BAT` hung at the copy/jump message, matching earlier `BTGVD67`
+  behavior.
+- In the ELKS shell, `fdisk -l /dev/cfa` still failed.
+- After `CFEN34`, DOS sometimes printed:
+
+```text
+Specified COMMAND search directory bad
+Specified COMMAND search directory bad access denied
+```
+
+This looks like a DOS-side consequence of reconfiguring the CF card while DOS
+is still running. The A/C paths can still continue into ELKS, so the message is
+not by itself a fatal ELKS failure.
+
+The R3D34 root image was checked with `mfs`; `/dev/cfa`, `/dev/cfa1...`, and
+`/dev/cfb` are present. The `fdisk` failure is therefore not caused by a
+missing device node in the ramdisk.
+
+## R3D35 Diagnostic
+
+An attempt was made to add more direct ATA-CF open/probe logging to the kernel,
+but even a very small diagnostic pushed the kernel from the known-booting
+`65488` bytes to `65552` bytes. That is above the practical loader envelope we
+have been trying to preserve for these HP 200LX tests, so R3D35 deliberately
+keeps the known-good R3D34/R3D8 kernel.
+
+Instead, R3D35 patches only `/bin/fdisk` in the ramdisk so an open failure
+prints:
+
+```text
+Error opening /dev/cfa errno=N
+```
+
+The package includes only:
+
+```text
+RUNR35A.BAT  CFEN34, DIR KERNBOP, MKINTS, BTGVDX
+RUNR35C.BAT  CARDIO, CFEN34, DIR KERNBOP, MKINTS, BTGVDX
+```
+
+`RUNR35B.BAT` is intentionally omitted because the `BTGVD67` path hangs on the
+current machine.
+
+The next important data point is the exact `errno=N` returned by:
+
+```text
+fdisk -l /dev/cfa
+```
+
+## R3D35 Test Results
+
+Observed on the HP 200LX:
+
+- `RUNR35A.BAT` booted into the ELKS shell.
+- `RUNR35C.BAT` booted into the ELKS shell.
+- `/dev/cfa`, `/dev/cfa1`, and `/dev/cfb` were visible in `ls -l`.
+- `fdisk -l /dev/cfa` and `fdisk -l /dev/cfa1` still printed the old
+  `Error opening ...` message without `errno=N`.
+
+The missing errno was not a wrong root-image problem. `fdisk -l` uses
+`list_partition()`, which has a separate `open()` failure path from edit mode.
+R3D35 patched only the edit-mode failure path.
+
+## R3D36 Diagnostic
+
+R3D36 keeps the known-booting R3D34/R3D35 kernel and loader path unchanged.
+Only ramdisk userland tools are changed:
+
+- `/bin/fdisk` now prints `errno=N` in both list mode and edit mode.
+- `/bin/cfprobe` is added to report `stat`, `open`, first 512-byte `read`, and
+  `HDIO_GETGEO` results for `/dev/cfa`, `/dev/cfa1`, and `/dev/cfb`.
+
+The test matrix is:
+
+```text
+RUNR36A.BAT  CFEN34, DIR KERNBOP, MKINTS, BTGVDX
+RUNR36C.BAT  CARDIO, CFEN34, DIR KERNBOP, MKINTS, BTGVDX
+```
+
+After booting each path, run:
+
+```text
+fdisk -l /dev/cfa
+fdisk -l /dev/cfa1
+cfprobe
+ls -l /dev/cfa /dev/cfa1 /dev/cfb
+```
+
+Interpretation:
+
+- `stat` failure means a ramdisk node/visibility problem.
+- `stat` success plus `open` failure points to block-driver registration or
+  major/minor dispatch.
+- `open` success plus `read` failure points to the ATA-CF read path.
+- `read` success plus `geo` failure points to `HDIO_GETGEO` handling.
+
+## R3D36 Results
+
+Both `RUNR36A.BAT` and `RUNR36C.BAT` booted to the ELKS shell and produced the
+same important result:
+
+```text
+fdisk -l /dev/cfa   -> Error opening /dev/cfa errno=6
+fdisk -l /dev/cfa1  -> Error opening /dev/cfa1 errno=6
+
+/dev/cfa
+ stat=0 mode=60644 blk rdev=5,0 raw=0500
+ open=-1 errno=6
+
+/dev/cfa1
+ stat=0 mode=60644 blk rdev=5,1 raw=0501
+ open=-1 errno=6
+
+/dev/cfb
+ stat=0 mode=60644 blk rdev=5,8 raw=0508
+ open=-1 errno=6
+```
+
+`ls -l /dev/cfa /dev/cfa1 /dev/cfb` also showed the expected block-device
+nodes:
+
+```text
+brw-r--r-- 1 root root 5, 0 ... cfa
+brw-r--r-- 1 root root 5, 1 ... cfa1
+brw-r--r-- 1 root root 5, 8 ... cfb
+```
+
+`errno=6` is `ENXIO`. The device nodes are present and have the expected major
+and minor numbers, but the ATA-CF open path is rejecting them. In
+`ata_cf_open()`, this happens when the partition table entry still has
+`start_sect == NOPART`. That points back to ATA-CF probe/identify/partition
+registration rather than the ramdisk device nodes.
+
+The R3D35/R3D36 boot photos also showed the relevant kernel-side failure:
+
+```text
+cfa: ATA at 1f0/3f6 xtide=0,0 not found (-22)
+```
+
+So the next diagnostic should focus on why the ELKS ATA reset/identify path
+does not see the card after DOS-side CFEN34/CARDIO setup, even though the DOS
+direct ATA probes can read the card at the same port window.
+
+## R3D37 Diagnostic
+
+R3D37 keeps the R3D36 root image and userland diagnostics unchanged. The only
+intended kernel experiment is to skip the ATA select/SRST reset block in the
+ATA-CF driver.
+
+Rationale:
+
+- CFEN34/CARDIO already configure the HP 200LX PCMCIA CF socket before ELKS is
+  launched.
+- DOS direct-read diagnostics can read the card at `1f0/3f6`.
+- The ELKS ATA-CF driver then issues a controller select and SRST through the
+  socket-mapped alternate-status/control port before IDENTIFY.
+- On the 200LX, that reset sequence may disturb the already-configured PCMCIA
+  ATA window or leave the card in a state where IDENTIFY never reaches DRQ.
+
+The R3D37 package therefore uses the stable A/C loader paths only:
+
+```text
+RUNR37A.BAT  CFEN34, DIR KERNBOP, MKINTS, BTGVDX
+RUNR37C.BAT  CARDIO, CFEN34, DIR KERNBOP, MKINTS, BTGVDX
+```
+
+After booting each path, run:
+
+```text
+fdisk -l /dev/cfa
+fdisk -l /dev/cfa1
+cfprobe
+ls -l /dev/cfa /dev/cfa1 /dev/cfb
+```
+
+Success/failure interpretation:
+
+- If `/dev/cfa` still opens with `errno=6`, the next target is the
+  IDENTIFY/partition-registration path.
+- If `open()` succeeds but `read()` fails, the next target is ATA sector reads.
+- If `fdisk` can list `/dev/cfa`, the SRST/reset sequence was likely the
+  blocking issue.
+
+## R3D37 Results
+
+Both `RUNR37A.BAT` and `RUNR37C.BAT` booted to the ELKS shell, but the results
+were effectively unchanged from R3D36:
+
+```text
+fdisk -l /dev/cfa   -> Error opening /dev/cfa errno=6
+fdisk -l /dev/cfa1  -> Error opening /dev/cfa1 errno=6
+
+/dev/cfa
+ stat=0 mode=60644 blk rdev=5,0 raw=0500
+ open=-1 errno=6
+
+/dev/cfa1
+ stat=0 mode=60644 blk rdev=5,1 raw=0501
+ open=-1 errno=6
+
+/dev/cfb
+ stat=0 mode=60644 blk rdev=5,8 raw=0508
+ open=-1 errno=6
+```
+
+The no-SRST kernel did not make `/dev/cfa` usable. This rules out the ATA
+soft-reset block as the sole blocking issue.
+
+## R3D38 Diagnostic
+
+R3D38 keeps the R3D37 no-SRST kernel and stable A/C boot paths. The root image
+adds one ELKS userland probe:
+
+```text
+/bin/ataprobe
+```
+
+`ataprobe` bypasses `/dev/cfa` entirely and directly accesses the standard ATA
+I/O window at `1f0/3f6` from ELKS userland. It performs read-only tests:
+
+- dump command/status registers
+- issue `IDENTIFY EC`
+- if DRQ is reached, read and print the first 32 identify bytes
+- issue `READ 20` for LBA sector 0
+- if DRQ is reached, read and print the first 32 sector bytes
+
+The test matrix is:
+
+```text
+RUNR38A.BAT  CFEN34, DIR KERNBOP, MKINTS, BTGVDX
+RUNR38C.BAT  CARDIO, CFEN34, DIR KERNBOP, MKINTS, BTGVDX
+```
+
+After booting each path, run:
+
+```text
+fdisk -l /dev/cfa
+cfprobe
+ataprobe
+ls -l /dev/cfa /dev/cfa1 /dev/cfb
+```
+
+Interpretation:
+
+- If `ataprobe` reaches DRQ/status `58` and prints identify or boot-sector
+  bytes, the CF card remains directly accessible after ELKS boots. The bug is
+  then in the kernel ATA-CF identify/registration path.
+- If `ataprobe` also fails to reach DRQ, the ELKS boot or ATA-CF probe is
+  leaving the PCMCIA ATA window/card in a state that later direct I/O cannot
+  recover from.
+
+## R3D38 Results
+
+Both `RUNR38A.BAT` and `RUNR38C.BAT` behaved the same:
+
+- `/dev/cfa`, `/dev/cfa1`, and `/dev/cfb` still existed with major 5 and the
+  expected minors.
+- `cfprobe` still showed `open=-1 errno=6`.
+- `ataprobe` succeeded when directly accessing `1f0/3f6` from ELKS userland.
+
+Visible `ataprobe` output included:
+
+```text
+ATAPROBE R3D38 direct 1f0/3f6
+initial cmd: 00 01 00 00 00 00 f0 00 alt:00
+IDENTIFY EC
+id poll: 58 final=58 i=0
+id first32: ... 84 00 de 00 ...
+after id cmd: ... a0 58 alt:58
+READ 20 LBA0
+rd poll: 58 final=58 i=1
+rd first32: eb 00 3c 00 90 00 4d 00 53 00 44 00 4f 00 53 ...
+after rd cmd: ... e0 58 alt:58
+```
+
+The read bytes decode as a DOS boot sector pattern:
+
+```text
+EB 3C 90 4D 53 44 4F 53 ...
+```
+
+This is an important narrowing result: after ELKS boots, the CF card is still
+directly readable at the expected I/O window. The problem is not simply that
+ELKS destroys the PCMCIA ATA mapping. The remaining mismatch is in the kernel
+ATA-CF identify/registration path.
+
+## R3D39 Diagnostic
+
+R3D39 keeps the R3D37 no-SRST behavior and the R3D38 root image with
+`ataprobe`. The kernel ATA command path is changed to match the successful
+direct probe more closely:
+
+- `IDENTIFY` uses drive/head `A0` and does not preload the LBA taskfile.
+- `READ` writes the taskfile registers first, then writes the final LBA
+  drive/head select before sending command `20`.
+
+The test matrix is:
+
+```text
+RUNR39A.BAT  CFEN34, DIR KERNBOP, MKINTS, BTGVDX
+RUNR39C.BAT  CARDIO, CFEN34, DIR KERNBOP, MKINTS, BTGVDX
+```
+
+After booting each path, run:
+
+```text
+fdisk -l /dev/cfa
+cfprobe
+ataprobe
+ls -l /dev/cfa /dev/cfa1 /dev/cfb
+```
+
+Interpretation:
+
+- If `fdisk -l /dev/cfa` succeeds, ATA taskfile/drive-select ordering was the
+  blocking issue.
+- If `/dev/cfa` still opens with `errno=6` but `ataprobe` still succeeds, the
+  direct command sequence works from userland but some remaining kernel
+  registration/read path still differs.
+
+## R3D39 Results
+
+Both `RUNR39A.BAT` and `RUNR39C.BAT` still showed `/dev/cfa`, `/dev/cfa1`,
+and `/dev/cfb` opening with `errno=6`. The visible `ataprobe` banner still
+said `R3D38` because the R3D38 root image was reused, but the R3D39 kernel was
+in use. `ataprobe` continued to read the CF card directly at `1f0/3f6`.
+
+Interpretation: the ATA taskfile command ordering change alone did not make
+the kernel register the CF disk. The remaining problem is likely either the
+kernel PIO data-transfer helper or the IDENTIFY sanity checks.
+
+## R3D40 Diagnostic
+
+R3D40 keeps the R3D39 command ordering and changes the kernel ATA-CF path:
+
+- 16-bit PIO reads use a simple `inw` loop, matching the successful userland
+  `ataprobe` style instead of the FASTIO `insw` helper.
+- The kernel prints key IDENTIFY words:
+  `w0`, `w1`, `w3`, `w6`, `w49`, `w60`, and `w61`.
+- A missing IDENTIFY LBA capability bit is logged but no longer treated as
+  fatal for this diagnostic, since direct `READ 20 LBA0` has already worked.
+
+The test matrix is:
+
+```text
+RUNR40A.BAT  CFEN34, DIR KERNBOP, MKINTS, BTGVDX
+RUNR40C.BAT  CARDIO, CFEN34, DIR KERNBOP, MKINTS, BTGVDX
+```
+
+After booting each path, run:
+
+```text
+fdisk -l /dev/cfa
+fdisk -l /dev/cfa1
+cfprobe
+ataprobe
+ls -l /dev/cfa /dev/cfa1 /dev/cfb
+```
+
+## R3D40 Results
+
+`RUNR40A.BAT` was tested first. This was a breakthrough: `/dev/cfa` opened and
+`fdisk -l /dev/cfa` read enough sector data to print a partition table rather
+than failing with `errno=6`.
+
+The printed partition table was still nonsense and ended with:
+
+```text
+Warning: invalid MBR?
+```
+
+`fdisk -l /dev/cfa1` still failed with `errno=6`.
+
+Interpretation: the whole-disk device now registers, but the kernel sector read
+path is still returning byte-spaced data. This matches the earlier userland
+`ataprobe` pattern where sector 0 appeared as:
+
+```text
+EB 00 3C 00 90 00 4D 00 53 00 ...
+```
+
+The next test should pack only the low byte returned by each 16-bit `inw`, so
+the kernel sees:
+
+```text
+EB 3C 90 4D 53 ...
+```
+
+## R3D41 Diagnostic
+
+R3D41 keeps the R3D40 registration/IDENTIFY relaxation but changes 16-bit ATA
+PIO reads to pack the low byte from each `inw` call contiguously.
+
+The test matrix is:
+
+```text
+RUNR41A.BAT  CFEN34, DIR KERNBOP, MKINTS, BTGVDX
+RUNR41C.BAT  CARDIO, CFEN34, DIR KERNBOP, MKINTS, BTGVDX
+```
+
+Primary test path is `RUNR41A.BAT`, since R3D40A already proved CFEN34-only can
+open `/dev/cfa`.
+
+## R3D41 Results
+
+`RUNR41A.BAT` continued to open and read `/dev/cfa`, and `fdisk -l /dev/cfa1`
+also reached the read path. Attempting to mount the existing FAT card failed
+with:
+
+```text
+mount failed: no such device
+```
+
+Interpretation: the block device path has advanced, but the R3D41 kernel did
+not include FAT/MS-DOS filesystem support. The R3D41 build linked MINIX only.
+
+## R3D42 Diagnostic
+
+R3D42 keeps the R3D41 ATA/CF changes and enables `CONFIG_FS_FAT` so the existing
+DOS/FAT PCMCIA CF card can be mounted directly.
+
+Primary test:
+
+```text
+RUNR42A.BAT
+fdisk -l /dev/cfa
+fdisk -l /dev/cfa1
+cfprobe
+mkdir /mnt
+mount -t fat -o ro /dev/cfa1 /mnt
+ls /mnt
+```
+
+If `fat` is not accepted by the userland mount command, try `msdos`:
+
+```text
+mount -t msdos -o ro /dev/cfa1 /mnt
+```
+
+## R3D42 Results
+
+`RUNR42A.BAT` and `RUNR42C.BAT` still reached the ELKS shell, and the block
+device path continued to work as in R3D41. However, mounting the FAT partition
+still failed with:
+
+```text
+mount failed: no such device
+```
+
+Inspection of the remote build showed that `CONFIG_FS_FAT` was enabled and
+`fs/msdos/msdos.a` was rebuilt, but `fs/super.o` remained stale from the earlier
+non-FAT build. That meant the global filesystem registration table still did not
+include `msdos_fs_type`, despite the FAT object archive existing.
+
+The kernel image size also remained identical to R3D41, which confirmed that FAT
+was not actually linked into the booted kernel.
+
+## R3D43 Diagnostic
+
+R3D43 keeps the R3D41/R3D42 ATA/CF path but forces a rebuild of:
+
+```text
+fs/super.o
+fs/fs.a
+fs/msdos/*.o
+fs/msdos/msdos.a
+arch/i86/boot/system
+arch/i86/boot/Image
+```
+
+The rebuilt image now links the FAT/MS-DOS filesystem registration path. The
+kernel grew from 65344 bytes to 79536 bytes, so this diagnostic also tests
+whether the current HP 200LX boot path can tolerate the larger FAT-enabled
+kernel.
+
+Test:
+
+```text
+RUNR43A.BAT
+fdisk -l /dev/cfa
+fdisk -l /dev/cfa1
+cfprobe
+mkdir /mnt
+mount -t fat -o ro /dev/cfa1 /mnt
+ls /mnt
+```
+
+If `RUNR43A.BAT` fails before the ELKS shell, the next step is a kernel shrink
+pass rather than another ATA probe change.
+
+## R3D43 Results
+
+Both `RUNR43A.BAT` and `RUNR43C.BAT` hung at the boot loader's quiet copy/jump
+step. This confirms that the FAT-enabled kernel with both MINIX and FAT linked
+is too large for the current HP 200LX boot path, even though the FAT
+registration problem was fixed.
+
+## R3D44 Diagnostic
+
+R3D44 attacks the size problem by using a FAT root ramdisk and removing MINIX
+filesystem support from the kernel. This keeps the kernel FAT-only while still
+allowing a shell and diagnostic commands from the ramdisk.
+
+Changes:
+
+```text
+Keep:    R3D41 ATA/CF low-byte packed sector reads
+Keep:    FAT/MS-DOS filesystem support
+Use:     FAT ROOT092 ramdisk image
+Remove:  MINIX filesystem support
+Trim:    CPU accounting, async I/O, OS/2 exec, /dev/mem, ANSI emulation
+```
+
+Kernel image size:
+
+```text
+R3D43 KERNBOP: 79536 bytes
+R3D44 KERNBOP: 67256 bytes
+```
+
+Primary test:
+
+```text
+RUNR44A.BAT
+ls /dev
+fdisk -l /dev/cfa
+fdisk -l /dev/cfa1
+mkdir /mnt
+mount -t fat -o ro /dev/cfa1 /mnt
+ls /mnt
+```
+
+Because the root filesystem is FAT, `/dev` entries are synthesized by the
+kernel's FAT fake-dev support. The generated FAT root image places `/dev` as
+the first directory entry so that fake-dev can activate.
+
+## R3D44 Results
+
+R3D44 reached the kernel, but the FAT-root ramdisk experiment failed with:
+
+```text
+panic: no init or sh found
+```
+
+This did not disprove the FAT driver path, but it showed that shrinking the
+kernel by switching the root ramdisk from Minix to FAT was not an immediately
+usable persistence path.
+
+The next direction was to stop trying to mount the existing DOS/FAT transfer
+card and instead use a dedicated Minix-formatted CF card for ELKS storage.
+This keeps the kernel small by using the already-working Minix root and Minix
+filesystem support.
+
+## R3D41/R3D45 Minix CF Results
+
+A separate CF card was prepared with:
+
+```text
+MBR partition table
+partition 1: type 0x81 Minix
+ELKS device: /dev/cfa1
+```
+
+With the R3D41 kernel path, ELKS successfully:
+
+```text
+fdisk -l /dev/cfa
+mount /dev/cfa1 /mnt
+df /mnt
+```
+
+The hardware screenshot showed `/dev/cfa1 (minix)` mounted on `/mnt`, with
+the expected free block count. A file could be created and read back during
+the same ELKS session.
+
+R3D45 packaged this as a persistence-focused test using the known-booting
+R3D41 kernel and the internal DOS `C:\ELKS` boot model. The card image was
+also copied back and inspected locally. It looked structurally valid:
+
+```text
+MBR signature: 55 aa
+partition 1: type 0x81, start sector 63, size 61377 sectors
+Minix V1 superblock magic: 0x137f
+```
+
+Actual R3D45 result:
+
+- The Minix card could still be mounted.
+- A file entry could be created while ELKS was running.
+- The intended file contents were not reliably written.
+- After a full reboot, the file was not present.
+
+Interpretation: R3D41/R3D45 proved block-device registration, partition reads,
+and Minix mounting from the PCMCIA CF card. They did not yet prove durable
+writeback to the card.
+
+## R3D46 Diagnostic
+
+The strongest new hypothesis is that the HP 200LX PCMCIA ATA data window is
+effectively byte-wide in both directions.
+
+R3D41 fixed reads by changing the 16-bit ATA transfer path from ordinary word
+storage:
+
+```c
+*buffer++ = inw(port);
+```
+
+to low-byte packing:
+
+```c
+for (i = 0; i < count; i++)
+    *buffer++ = inw(port);
+```
+
+R3D46 keeps that read behavior and mirrors it for writes. Instead of packing
+two bytes into each ATA data-port word, it sends each byte as the low byte of
+one 16-bit write:
+
+```c
+for (i = 0; i < count; i++)
+    outw(*buffer++, port);
+```
+
+This is intentionally a narrow diagnostic. It keeps the known R3D41/R3D45
+loader path and changes only the write transfer behavior.
+
+Test package:
+
+```text
+RUNR46A.BAT  CFEN34 only
+RUNR46C.BAT  CARDIO, then CFEN34
+```
+
+Primary ELKS-side test:
+
+```text
+fdisk -l /dev/cfa
+fdisk -l /dev/cfa1
+mkdir /mnt
+mount /dev/cfa1 /mnt
+echo r3d46 >/mnt/r46.txt
+sync
+cat /mnt/r46.txt
+ls /mnt
+umount /mnt
+```
+
+Then reboot fully back to DOS, boot the same R3D46 path again, remount
+`/dev/cfa1`, and verify:
+
+```text
+cat /mnt/r46.txt
+```
+
+## R3D46 Results
+
+`RUNR46A.BAT` proved durable PCMCIA/CF Minix writes on the HP 200LX.
+
+First run:
+
+```text
+mount /dev/cfa1 /mnt
+echo r3d46 > /mnt/r46.txt
+sync
+ls /mnt
+cat /mnt/r46.txt
+```
+
+The file appeared as `r46.txt`, and `cat /mnt/r46.txt` printed:
+
+```text
+r3d46
+```
+
+After a full reboot back through DOS and then the R3D46 boot path, ELKS
+remounted the CF card:
+
+```text
+mount /dev/cfa1 /mnt
+cat /mnt/r46.txt
+ls -al /mnt
+```
+
+The file was still present, and `cat /mnt/r46.txt` again printed:
+
+```text
+r3d46
+```
+
+Interpretation:
+
+- The Minix CF image and partition layout are valid.
+- The R3D41 low-byte packed read path is correct for the HP 200LX PCMCIA ATA
+  window.
+- The R3D46 low-byte packed write path is also required.
+- Ordinary packed 16-bit ATA writes can create misleading transient filesystem
+  activity, but do not persist correctly on this hardware path.
+
+Release 3 can now move from raw storage diagnostics to building a practical
+persistent ELKS environment. The safest next model is still:
+
+```text
+internal DOS C:\ELKS boot bundle
+PCMCIA CF /dev/cfa1 Minix persistent filesystem
+```
+
+The next experiments should decide whether `/dev/cfa1` becomes a mounted data
+filesystem, a populated userland filesystem, or the eventual ELKS root
+filesystem.
+
+## R3D47 Root Filesystem Test
+
+R3D47 turns the R3D46 persistence proof into the practical Release 3 model:
+
+```text
+internal DOS C:\ELKS boot bundle
+PCMCIA CF /dev/cfa1 Minix root filesystem
+```
+
+The kernel and loader path are kept close to the known-good R3D46 path. The
+small `ROOT092` image is retained only so the boot loader can provide
+`/bootopts` to the kernel. That file now contains:
+
+```text
+hma=kernel
+root=cfa1
+```
+
+The separate CF image is a whole-card 30 MB image with the same known-good
+layout used in previous Minix tests:
+
+```text
+partition type: 0x81 Minix
+start sector:   63
+size:           61377 sectors
+```
+
+Its Minix filesystem was generated from the current R3D46 ELKS target tree and
+then populated with ELKS device nodes using `image/Make.devices`. It includes
+`/bin/init`, `/bin/sh`, `/dev/cfa`, `/dev/cfa1`, `/dev/cfb`, and basic tools.
+
+Expected result:
+
+```text
+VFS: Mounted root device /dev/cfa1 (0501) minix filesystem.
+```
+
+If that succeeds and files written under `/root` survive a full reboot, then
+Release 3 has a stable persistent root-filesystem path. The cleaner
+single-card DOS/FAT loader plus Minix root layout should be treated as a later
+Release 4 installer project.
+
+## R3D48 Full Userland Root Candidate
+
+R3D48 keeps the same boot architecture as R3D47 but replaces the small
+diagnostic root tree with a larger HD-style ELKS Minix root filesystem.
+
+The image is generated from the patched HP 200LX tree with:
+
+```text
+CONFIG_APPS_HD=y
+CONFIG_IMG_HD=y
+CONFIG_IMG_BLOCKS=30688
+CONFIG_IMG_SECT=63
+CONFIG_IMG_HEAD=16
+CONFIG_IMG_CYL=61
+CONFIG_IMG_MINIX=y
+CONFIG_IMG_DEV=y
+CONFIG_IMG_BOOT=y
+```
+
+The resulting filesystem is then customized with:
+
+```text
+/bootopts       hma=kernel, root=cfa1
+/root/R3D48.TXT marker file
+/bin/hphello    HP 200LX screenshot helper
+```
+
+The R3D48 image was verified with `mfsck` and includes regular ELKS userland
+programs such as:
+
+```text
+/bin/tetris
+/bin/digger
+/bin/invaders
+/bin/banner
+/bin/basic
+/bin/vi
+/bin/advent
+/bin/elkirc
+/bin/memopad
+```
+
+Its `/bin` contents were compared against the official ELKS 0.9.1
+`fd2880-minix.img` release image. After importing `digger`, `elkirc`, and
+`memopad` from that image, no official `/bin` entries are missing. R3D48 adds
+`hphello`, `romprg`, and `test_audio`.
+
+This became the stronger Release 3 root image candidate, but R3D47/R3D48
+testing exposed an additional loader issue: placing `root=cfa1` in `/bootopts`
+inside `ROOT092` did not make ELKS mount `/dev/cfa1` as `/`.
+
+## R3D49 Loader Bootopts Fix
+
+The loader path still booted into the small RAM root image. The reason was not
+the CF card image. `BTGVDX.COM` itself contains an embedded boot-options block
+that is copied to ELKS' bootopts memory area before the kernel starts.
+
+The stale embedded block contained:
+
+```text
+root=256
+console=tty1
+disable=fd0,hda
+init=/bin/sh
+```
+
+`root=256` is decimal `0x0100`, which selects the RAM disk root device. R3D49
+patches the embedded `BTGVDX.COM` bootopts to:
+
+```text
+root=cfa1
+console=tty1
+disable=fd0,hda
+init=/bin/sh
+```
+
+The R3D49 package therefore keeps the stable boot path and the full R3D48
+Minix root image, but changes the loader so the early kernel bootopts request
+the PCMCIA/CF root device.
+
+Expected R3D49 boot result:
+
+```text
+VFS: Mounted root device /dev/cfa1 (0501) minix filesystem.
+```
+
+If confirmed on hardware, the Release 3 practical path is:
+
+```text
+DOS boots from internal C:
+C:\ELKS\RUNR49A.BAT or RUNR49C.BAT starts ELKS
+BTGVDX.COM passes root=cfa1
+ELKS mounts the PCMCIA/CF Minix partition as /
+```
+
+R3D49A was confirmed on hardware: ELKS mounted `/dev/cfa1` as `/`, and files
+written to the Minix root survived a full reboot.
+
+## R3D50 Single-Card Experiment
+
+R3D50 tests whether Release 3 can be packaged as one self-contained
+PCMCIA/CF card. The HP 200LX User Guide describes startup behavior that can
+select `A:` for DOS startup files, so the card image is arranged as:
+
+```text
+partition 1: FAT12, active, 2 MiB
+             DOS startup files and ELKS loader files
+
+partition 2: Minix, 30 MiB
+             full ELKS root filesystem
+```
+
+Since the Minix root is now partition 2, the loader must pass `root=cfa2`.
+The R3D50 `BTGVDX.COM` was patched from `root=cfa1` to `root=cfa2`.
+
+The FAT partition root directory contains:
+
+```text
+AUTOEXEC.BAT
+CONFIG.SYS
+RUNR50A.BAT
+RUNR50C.BAT
+RUNR50D.BAT
+BTGVDX.COM
+KERNBOP
+ROOT092
+MKINTS.COM
+CFEN34.COM
+CARDIO.EXE
+```
+
+`AUTOEXEC.BAT` runs `RUNR50A.BAT`, which does not re-run CFEN34. This is meant
+to avoid disturbing DOS access to the same card before `BTGVDX.COM` has read
+the kernel and boot ramdisk files. `RUNR50C.BAT` and `RUNR50D.BAT` remain as
+manual fallback tests.
+
+The Minix root partition was copied from the full R3D49 root image and then
+adjusted:
+
+```text
+/bootopts       hma=kernel, root=cfa2
+/dev/cfa2       block device 5,2
+/root/R3D50.TXT marker file
+/bin/hphello    present
+/bin/tetris     present
+```
+
+The generated image has this partition table:
+
+```text
+*1: type 01 FAT12, start 63,   size 4096 sectors
+ 2: type 81 Minix, start 4159, size 61377 sectors
+```
+
+Expected successful R3D50 boot message:
+
+```text
+VFS: Mounted root device /dev/cfa2 (0502) minix filesystem.
+```
+
+Hardware testing showed that the R3D50 single-card experiment is not stable
+enough for Release 3. When DOS and the ELKS loader are started from the same
+PCMCIA/CF card that ELKS later tries to use as its Minix root, the card can be
+left in a state where the ELKS CF probe times out:
+
+```text
+cfa: wait timeout st=ec
+cfa: ATR at 1f0/3f6 xtide=0,0 not found (-6)
+VFS: Unable to open root device /dev/cfa2 (0502) -6
+SYSTEM HALTED
+```
+
+Release 3 should therefore use the proven two-stage boot path:
+
+```text
+1. Boot HP 200LX DOS from the internal C: drive.
+2. Run the ELKS boot bundle from C:\ELKS.
+3. Mount the PCMCIA/CF Minix partition as ELKS root /dev/cfa1.
+```
+
+The public Release 3 package renames the working R3D49A path:
+
+```text
+RUNR49A.BAT -> RUNELKS.BAT
+RUNR49C.BAT -> RUNCARD.BAT
+```
+
+`BTGVDX.COM` is patched with embedded `root=cfa1`, and the final root image
+contains the complete official ELKS 2880K Minix filesystem contents plus
+`/bin/hphello` and `/root/RELEASE3.TXT`.
