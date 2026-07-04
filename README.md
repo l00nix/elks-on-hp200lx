@@ -159,15 +159,6 @@ The root image was compared with the official ELKS `fd2880-minix.img`; no offici
 /root/RELEASE3.TXT
 ```
 
-It also contains two Nano-X JPEG sample files in `/root`:
-
-```text
-/root/earth.jpg
-/root/girl1.jpg
-```
-
-`nxjpeg` is included and is the likely JPEG viewer/demo program.
-
 ### Release 3 Limitations
 
 - This remains an experimental downstream/community build.
