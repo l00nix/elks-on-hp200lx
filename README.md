@@ -245,7 +245,7 @@ Release 3 therefore ships the practical, tested design: DOS boot files on the in
 
 ## Roadmap
 
-- Test networking with a dual PCMCIA setup, either using an [Accurite DoubleSlot PCMCIA doubler](https://web.archive.org/web/20011222100220/http://www.accurite.com/dslot.html) if one becomes available, or YYZKevin's planned [PicoPCMCIA](https://www.yyzkevin.com/picopcmcia/) card once released, so a network card can be added alongside storage.
+- Test networking with a dual PCMCIA setup, either using an [Accurite DoubleSlot PCMCIA doubler](https://web.archive.org/web/20011222100220/http://www.accurite.com/dslot.html) if one becomes available, or  [yyzkevin](https://github.com/yyzkevin)'s planned [PicoPCMCIA](https://www.yyzkevin.com/picopcmcia/) card once released, so a network card can be added alongside storage.
 - Clean up the HP 200LX keyboard scanner into a maintainable platform-specific driver.
 - Clean up the CF support and boot helpers for a future upstreamable shape.
 - Revisit a fully self-contained PCMCIA/CF boot card as a possible Release 4.
