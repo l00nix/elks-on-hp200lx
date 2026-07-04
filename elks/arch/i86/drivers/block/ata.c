@@ -170,17 +170,13 @@ static void ATPROC read_ioport(int port, unsigned char __far *buffer, size_t cou
 
     switch (xfer_mode) {
     case XFER_16:
-#if FASTIO
-        insw(port, _FP_SEG(buffer), _FP_OFF(buffer), count/2);
-#else
-        for (i = 0; i < count; i+=2)
-        {
-            unsigned short word = inw(port);
-
-            *buffer++ = word;
-            *buffer++ = word >> 8;
-        }
-#endif
+        /*
+         * HP 200LX PCMCIA ATA presents the standard ATA data port through a
+         * byte-wide window: each inw advances one data byte and returns it in
+         * the low byte. Pack those low bytes contiguously.
+         */
+        for (i = 0; i < count; i++)
+            *buffer++ = inw(port);
         break;
 
     case XFER_8_XTCF:
@@ -210,16 +206,13 @@ static void ATPROC write_ioport(int port, unsigned char __far *buffer, size_t co
 
     switch (xfer_mode) {
     case XFER_16:
-#if FASTIO
-        outsw(port, _FP_SEG(buffer), _FP_OFF(buffer), count/2);
-#else
-        for (i = 0; i < count; i+=2)
-        {
-            word = *buffer++;
-            word |= *buffer++ << 8;
-            outw(word, port);
-        }
-#endif
+        /*
+         * Mirror the HP 200LX byte-wide read path: send each data byte in the
+         * low byte of one 16-bit write. Sending normal packed words corrupts
+         * CF writes on the palmtop's PCMCIA ATA window.
+         */
+        for (i = 0; i < count; i++)
+            outw(*buffer++, port);
         break;
 
     case XFER_8_XTCF:
