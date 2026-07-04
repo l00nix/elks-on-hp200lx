@@ -36,6 +36,7 @@ VFS: Mounted root device /dev/cfa1 (0501) minix filesystem.
 
 - Boot package: [`releases/hp200lx-release3.zip`](releases/hp200lx-release3.zip)
 - PCMCIA/CF root image package: [`releases/hp200lx-release3-rootcf.zip`](releases/hp200lx-release3-rootcf.zip)
+- Optional hpreboot test root image package: [`releases/hp200lx-release3-hpreboot-rootcf.zip`](releases/hp200lx-release3-hpreboot-rootcf.zip)
 - Normal DOS entry point: `RUNELKS.BAT`
 - Fallback DOS entry point: `RUNCARD.BAT`
 - Kernel image inside the boot package: `KERNBOP`
@@ -47,6 +48,8 @@ Checksums:
 77f243dd0bcdfadb8d36bfc9271ecc37d47c15904b1d13a9f30b15de3e59b562  hp200lx-release3.zip
 f770d2be6d804cdfa6fa8e332533ee111b45401ec520e8ded2746530b854ca2a  hp200lx-release3-rootcf.zip
 2f346ad04526a37536178e463f78b478b774e051278572361f6e72bdec704aa1  R3ROOT.IMG
+0c13fb4c85a19e94dbebc3d75a5bd1c28603837a9d32804facf9122ac5952a9a  hp200lx-release3-hpreboot-rootcf.zip
+9f09d7476fc26196106d423ef6efc5d0abd57050802cf1d001b2673c9d3fdccd  hpreboot R3ROOT.IMG
 ```
 
 ### Install Release 3
@@ -158,6 +161,15 @@ The root image was compared with the official ELKS `fd2880-minix.img`; no offici
 /bin/hphello
 /root/RELEASE3.TXT
 ```
+
+The optional hpreboot root image additionally includes:
+
+```text
+/bin/hpreboot
+/root/HPREBOOT.TXT
+```
+
+`hpreboot` is a small HP 200LX reboot experiment. It runs `sync()` and then jumps directly to the BIOS reset vector at `FFFF:0000`, matching the tiny DOS `reboot.com` behavior that works on the HP 200LX DOS side. It is intended for testing only until the reset behavior is confirmed on real hardware.
 
 ### Release 3 Limitations
 

@@ -23,6 +23,7 @@ PRGS = \
 	umount \
 	passwd \
 	shutdown \
+	hpreboot \
 	ps \
 	meminfo \
 	who \
@@ -73,6 +74,9 @@ passwd: passwd.o
 
 shutdown: shutdown.o
 	$(LD) $(LDFLAGS) -o shutdown shutdown.o $(LDLIBS)
+
+hpreboot: hpreboot.o
+	$(LD) $(LDFLAGS) -o hpreboot hpreboot.o $(LDLIBS)
 
 ps: ps.o $(TINYPRINTF)
 	$(LD) $(LDFLAGS) -maout-heap=1024 -maout-stack=2048 -o ps ps.o $(TINYPRINTF) $(LDLIBS)
