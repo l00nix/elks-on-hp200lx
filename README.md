@@ -6,6 +6,71 @@ This is community bring-up work, not an official ELKS release. It tracks the HP 
 
 ---
 
+## Release 3.1 - RAMdisk Memory Fix
+
+**Release 3.1 is the recommended HP 200LX ELKS build.** It keeps the Release 3 PCMCIA/CF persistent root filesystem path, but fixes the unused RAMdisk reservation that left ELKS with much less conventional memory for programs.
+
+Release 3.1 was validated on real HP 200LX hardware using the MEMLAB16 test build. The kernel now reports:
+
+```text
+rd: 0K ramdisk at 3200:0000
+VFS: Mounted root device /dev/cfa1 (0501) minix filesystem.
+```
+
+The Release 3.1 memory test showed approximately:
+
+```text
+Main 79/512K used, 431K free
+```
+
+This is a boot-package update only. Use the Release 3 PCMCIA/CF root image package for the Minix root filesystem.
+
+What changed from Release 3:
+
+- `KERNBOP` was updated with the MEMLAB16/R3D46 kernel patch.
+- The kernel reserves `0K` for the legacy RAMdisk instead of the old `360K` reservation.
+- `ROOT092` remains in the DOS boot package for compatibility with the current `BTGVDX` loader path, but it no longer costs ELKS the old RAMdisk reservation after boot.
+- The root filesystem is still the persistent PCMCIA/CF Minix partition mounted from `/dev/cfa1`.
+- `vi` now has enough memory to start; set `TERM=ansi` first.
+
+### Release 3.1 Artifacts
+
+- Boot package: [`releases/hp200lx-release3.1.zip`](releases/hp200lx-release3.1.zip)
+- PCMCIA/CF root image package: [`releases/hp200lx-release3-rootcf.zip`](releases/hp200lx-release3-rootcf.zip)
+- Normal DOS entry point: `RUNELKS.BAT`
+- Fallback DOS entry point: `RUNCARD.BAT`
+- Kernel image inside the boot package: `KERNBOP`
+- Root image inside the root package: `R3ROOT.IMG`
+
+Checksums:
+
+```text
+4ce7788969635c625d4c21524e89cd9e4c07fb77266d67e36d9681cfce753461  hp200lx-release3.1.zip
+bf6ac72d5f090cc3062876f910f477da61216cd171c0664fcfb2942ac4aa54d0  KERNBOP
+f770d2be6d804cdfa6fa8e332533ee111b45401ec520e8ded2746530b854ca2a  hp200lx-release3-rootcf.zip
+2f346ad04526a37536178e463f78b478b774e051278572361f6e72bdec704aa1  R3ROOT.IMG
+```
+
+### Install Release 3.1
+
+Follow the Release 3 install process, but use [`hp200lx-release3.1.zip`](releases/hp200lx-release3.1.zip) for the DOS `C:\ELKS` boot files. The root image is unchanged from Release 3, so continue to use [`hp200lx-release3-rootcf.zip`](releases/hp200lx-release3-rootcf.zip) for the PCMCIA/CF card.
+
+After ELKS boots, set `TERM` before starting `vi`:
+
+```text
+TERM=ansi
+export TERM
+vi
+```
+
+### Release 3.1 Notes
+
+- `BTGVDX` may still print `ROOTEND=8C00`; that is expected because the loader path is unchanged.
+- The important kernel clue is `rd: 0K ramdisk at 3200:0000`.
+- A future cleanup can remove the custom loader RAMdisk copy path entirely, but Release 3.1 already reclaims the memory for ELKS after boot.
+
+---
+
 ## Release 3 - Persistent PCMCIA/CF Root Filesystem
 
 **Release 3 boots ELKS on a real HP 200LX with the built-in keyboard and a persistent Minix root filesystem on a PCMCIA/CF card.**
