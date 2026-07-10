@@ -23,6 +23,10 @@ The Release 3.1 memory test showed approximately:
 Main 79/512K used, 431K free
 ```
 
+![HP 200LX Release 3.1 meminfo showing the reclaimed RAMdisk memory](docs/hp200lx/images/release3.1-meminfo.jpg)
+
+*Release 3.1/MEMLAB16 on real HP 200LX hardware: `meminfo` after booting with a 0K RAMdisk reservation.*
+
 This is a boot-package update only. Use the Release 3 PCMCIA/CF root image package for the Minix root filesystem.
 
 What changed from Release 3:
