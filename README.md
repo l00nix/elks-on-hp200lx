@@ -23,6 +23,10 @@ The Release 3.1 memory test showed approximately:
 Main 79/512K used, 431K free
 ```
 
+![HP 200LX Release 3.1 boot showing 0K RAMdisk reservation](docs/hp200lx/images/release3.1-boot-0k-ramdisk.jpg)
+
+*Release 3.1/MEMLAB16 boot on real HP 200LX hardware: the kernel reports `rd: 0K ramdisk at 3200:0000` before mounting the PCMCIA/CF root filesystem.*
+
 ![HP 200LX Release 3.1 meminfo showing the reclaimed RAMdisk memory](docs/hp200lx/images/release3.1-meminfo.jpg)
 
 *Release 3.1/MEMLAB16 on real HP 200LX hardware: `meminfo` after booting with a 0K RAMdisk reservation.*
