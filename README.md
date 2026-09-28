@@ -3,8 +3,9 @@
 [Beta notes and hardware test instructions](docs/hp200lx/RELEASE3.5.1-BETA1.md)
 cover removing the kernel RAMdisk driver. The image is 1,288 bytes smaller than
 Release 3.5. Build checks pass, and photo 25811 confirms HP boot, CF root mount
-and a shell prompt. Input, display controls and memory checks are still pending
-for this beta. Networking remains disabled.
+and a shell prompt. The user also confirms `ls /`, `cat /etc/issue`, `meminfo`,
+basic keyboard input, zoom and panning work. Recorded memory figures remain
+pending. Networking remains disabled.
 
 Use the configuration and build kit in `ports/hp200lx/release3.5.1-beta1/`.
 [Release 3.5](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5)

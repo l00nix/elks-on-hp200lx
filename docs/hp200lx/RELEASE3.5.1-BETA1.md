@@ -3,8 +3,9 @@
 28 September 2026. **Hardware-test beta; Release 3.5 remains the stable release.**
 Photo 25811 confirms boot through the DOS handoff, a Minix root mount on
 `/dev/cfa1`, and a shell prompt on the HP 200LX. The kernel RAMdisk line is
-absent. Keyboard operation, zoom/panning and `meminfo` are not established by
-this photograph. See [hardware result](hardware-results/2026-09-28-3.5.1-beta1-boot.md).
+absent. A subsequent user report confirms `ls /`, `cat /etc/issue` and
+`meminfo` work, along with basic keyboard input, zoom and panning. The actual
+`meminfo` figures are still pending. See [hardware result](hardware-results/2026-09-28-3.5.1-beta1-boot.md).
 
 ## Change and purpose
 
