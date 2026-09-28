@@ -76,7 +76,7 @@ void hp200lx_fw_prepare(void)
     sys_caps &= ~(CAP_KBD_LEDS | CAP_IRQ2MAP9 | CAP_IRQ8TO15);
     disable_irq(1);
     disable_irq(2);
-    printk("HPFW2 ROM %x IRQ2 %x:%x IER %x/%x PIC %x\n",
+    printk("HPFW2A ROM %x IRQ2 %x:%x IER %x/%x PIC %x\n",
         hp_model_revision, hpfw_rom_vector[1], hpfw_rom_vector[0],
         hornet_read(0x18), hornet_read(0x19), inb(0x21));
 }

@@ -220,7 +220,12 @@
 #define LOADALL_SEG     0x80        /* LOADALL buffer from 0x800-0x865 on 80286 CPU */
 #define REL_INITSEG     0x90        /* 0x200 bytes setup data */
 #define DMASEG          0xB0        /* start of floppy sector buffer */
+#ifdef CONFIG_HP200LX_FW
+/* Retain the 0340h kernel base used by the working HP DOS handoff. */
+#define REL_SYSSEG      0x0340
+#else
 #define REL_SYSSEG      DMASEGEND   /* kernel code segment */
+#endif
 #define SETUP_DATA      REL_INITSEG
 #endif
 
