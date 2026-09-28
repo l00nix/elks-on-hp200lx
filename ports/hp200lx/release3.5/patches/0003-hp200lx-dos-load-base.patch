@@ -20,7 +20,7 @@
      disable_irq(1);
      disable_irq(2);
 -    printk("HPFW2 ROM %x IRQ2 %x:%x IER %x/%x PIC %x\n",
-+    printk("HPFW2A ROM %x IRQ2 %x:%x IER %x/%x PIC %x\n",
++    printk("HPR3.5 ROM %x IRQ2 %x:%x IER %x/%x PIC %x\n",
          hp_model_revision, hpfw_rom_vector[1], hpfw_rom_vector[0],
          hornet_read(0x18), hornet_read(0x19), inb(0x21));
  }
@@ -31,7 +31,7 @@
  		'#define UTS_RELEASE %s\n' "\"$(DIST)\""
  	printf >> include/linuxmt/compiler-generated.h		\
 -		'#define UTS_VERSION %s\n' "\"hp200lx-fw2 2026-09-28\""
-+		'#define UTS_VERSION %s\n' "\"hp200lx-fw2a 2026-09-28\""
++		'#define UTS_VERSION %s\n' "\"hp200lx-r3.5 2026-09-28\""
  
  #########################################################################
  # Specification files for archives.

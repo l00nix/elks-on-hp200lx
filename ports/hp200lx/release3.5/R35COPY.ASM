@@ -1,4 +1,4 @@
-; Checked selection of FW2A kernel for the released DOS loader.
+; Checked selection of Release 3.5 kernel for the released DOS loader.
 ; 8086 / DOS 2+, GPL-2.0-or-later. Exit 0 only after full readback comparison.
 bits 16
 cpu 8086
@@ -114,7 +114,7 @@ fail:
     int 21h
     mov ax, 4c01h
     int 21h
-source db 'KERNFW2A',0
+source db 'KERNR35',0
 target db 'KERNBOP',0
 good db 'KERNBOP copied and verified.',13,10,'$'
 bad db 'Kernel copy/readback failed. Check files and free space on C:.',13,10,'$'

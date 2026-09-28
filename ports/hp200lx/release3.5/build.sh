@@ -3,7 +3,7 @@
 set -euo pipefail
 OVERLAY=$(cd "$(dirname "$0")" && pwd)
 BASE=${BASE:-/home/arau/elks}
-WORK=${WORK:-/home/arau/elks-hp200lx-fw2a-rebuild}
+WORK=${WORK:-/home/arau/elks-hp200lx-release-3.5-rebuild}
 REV=69dfd4f274139ef1f533c646711db84902b0cfe4
 if [ -e "$WORK" ]; then
     echo "Refusing existing build directory: $WORK" >&2

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the actual FWACOPY.COM in an 8086-mode emulator with mocked DOS file I/O."""
+"""Run the actual R35COPY.COM in an 8086-mode emulator with mocked DOS file I/O."""
 from pathlib import Path
 import sys
 import unittest
@@ -10,12 +10,12 @@ from unicorn.x86_const import *
 def run(fault=None, size=63320):
     u = Uc(UC_ARCH_X86, UC_MODE_16)
     u.mem_map(0, 0x100000)
-    u.mem_write(0x10100, (HERE/'FWACOPY.COM').read_bytes())
+    u.mem_write(0x10100, (HERE/'R35COPY.COM').read_bytes())
     for reg in [UC_X86_REG_CS, UC_X86_REG_DS, UC_X86_REG_ES, UC_X86_REG_SS]:
         u.reg_write(reg, 0x1000)
     u.reg_write(UC_X86_REG_SP, 0xfffe)
     payload = bytes((i*17+3) % 256 for i in range(size))
-    files = {'KERNFW2A': bytearray(payload), 'KERNBOP': bytearray(b'old kernel')}
+    files = {'KERNR35': bytearray(payload), 'KERNBOP': bytearray(b'old kernel')}
     handles = {}
     output, exits = [], []
     def reg(r): return u.reg_read(r)
@@ -35,7 +35,7 @@ def run(fault=None, size=63320):
             uc.reg_write(UC_X86_REG_AX, 5)
         if ah in (0x3d, 0x3c):
             name = string(addr, b'\0')
-            if fault == 'open' and name == 'KERNFW2A': return error()
+            if fault == 'open' and name == 'KERNR35': return error()
             if fault == 'create' and ah == 0x3c: return error()
             if ah == 0x3c: files[name] = bytearray()
             if name not in files: return error()
