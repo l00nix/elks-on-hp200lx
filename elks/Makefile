@@ -129,7 +129,7 @@ include/linuxmt/compiler-generated.h:
 	printf > include/linuxmt/compiler-generated.h		\
 		'#define UTS_RELEASE %s\n' "\"$(DIST)\""
 	printf >> include/linuxmt/compiler-generated.h		\
-		'#define UTS_VERSION %s\n' "\"hp200lx-r3.5 2026-09-28\""
+		'#define UTS_VERSION %s\n' "\"hp200lx-3.5.1-b1 2026-09-28\""
 
 #########################################################################
 # Specification files for archives.

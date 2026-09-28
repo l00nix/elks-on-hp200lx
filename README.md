@@ -1,10 +1,14 @@
-# ELKS on HP 200LX — Release 3.5
+# ELKS on HP 200LX — Release 3.5.1 beta 1
 
-[Release and architecture notes](docs/hp200lx/RELEASE3.5.md)
-include installation, evidence, limitations and build instructions.
+[Beta notes and hardware test instructions](docs/hp200lx/RELEASE3.5.1-BETA1.md)
+cover removing the kernel RAMdisk driver. The image is 1,288 bytes smaller than
+Release 3.5. Build checks pass; HP hardware boot is pending. Networking remains
+disabled while this change is tested.
 
-This branch is the clean upstream-based firmware port.
-[Earlier Release 3.1 and historical work](https://github.com/l00nix/elks-on-hp200lx/tree/hp200lx) remain on the `hp200lx` branch.
+Use the configuration and build kit in `ports/hp200lx/release3.5.1-beta1/`.
+[Release 3.5](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5)
+remains the stable release and fallback. The source retains the clean upstream
+baseline and existing HP platform/CF support.
 
 ---
 

@@ -1,0 +1,93 @@
+--- a/elks/arch/i86/drivers/block/ata.c
++++ b/elks/arch/i86/drivers/block/ata.c
+@@ -170,7 +170,11 @@
+ 
+     switch (xfer_mode) {
+     case XFER_16:
+-#if FASTIO
++#ifdef CONFIG_HP200LX_FW
++        /* HP PCMCIA window: each word access advances one byte. */
++        for (i = 0; i < count; i++)
++            *buffer++ = inw(port);
++#elif FASTIO
+         insw(port, _FP_SEG(buffer), _FP_OFF(buffer), count/2);
+ #else
+         for (i = 0; i < count; i+=2)
+@@ -210,7 +214,11 @@
+ 
+     switch (xfer_mode) {
+     case XFER_16:
+-#if FASTIO
++#ifdef CONFIG_HP200LX_FW
++        /* Match the byte-wide HP socket read path. */
++        for (i = 0; i < count; i++)
++            outw(*buffer++, port);
++#elif FASTIO
+         outsw(port, _FP_SEG(buffer), _FP_OFF(buffer), count/2);
+ #else
+         for (i = 0; i < count; i+=2)
+@@ -313,6 +321,26 @@
+     unsigned char status;
+ 
+ 
++#ifdef CONFIG_HP200LX_FW
++    /* Preserve the ordering verified with the HP DOS-configured socket. */
++    unsigned char select = 0xA0 | (drive << 4);
++    error = ata_wait(WAIT_50MS);
++    if (error)
++        return error;
++    if (cmd == ATA_CMD_ID) {
++        OUTB(select, ATA_REG_SELECT);
++        OUTB(cmd, ATA_REG_CMD);
++    } else {
++        select |= 0x40 | ((sector >> 24) & 0x0F);
++        OUTB(0x00, ATA_REG_FEAT);
++        OUTB(count, ATA_REG_CNT);
++        OUTB((unsigned char)sector, ATA_REG_LBA_LO);
++        OUTB((unsigned char)(sector >> 8), ATA_REG_LBA_MD);
++        OUTB((unsigned char)(sector >> 16), ATA_REG_LBA_HI);
++        OUTB(select, ATA_REG_SELECT);
++        OUTB(cmd, ATA_REG_CMD);
++    }
++#else
+     // send command
+ 
+     error = ata_select(drive, cmd, sector);
+@@ -326,6 +354,7 @@
+     OUTB((unsigned char) (sector >> 16), ATA_REG_LBA_HI); // FIXME OUTB compiler bug here
+     OUTB(cmd, ATA_REG_CMD);
+ 
++#endif
+ 
+     // wait for drive to be not-busy
+ 
+@@ -405,6 +434,10 @@
+ #endif
+ 
+     // dynamically set controller access method and I/O port addresses
++
++#ifdef CONFIG_HP200LX_FW
++    if (ata_mode == AUTO) ata_mode = MODE_ATA; /* HP 80186 uses 1F0h */
++#endif
+ 
+     if (ata_mode == AUTO || ata_mode > MODE_MAX)
+     {
+@@ -441,6 +474,7 @@
+     if (ata_mode == MODE_XTIDEv2)
+         ata_ctrl_port ^= 0b1001;        // tricky swap A0 and A3 works only for reg 6
+ 
++#ifndef CONFIG_HP200LX_FW
+     // controller reset
+ 
+     byte = INB(ATA_REG_SELECT);
+@@ -463,6 +497,10 @@
+ 
+     outb(0x02, ata_ctrl_port);
+     delay_10ms();
++
++#else
++    /* CFEN34 configured the HP socket; do not reset its mapped control port. */
++#endif
+ 
+     // try and turn on 8-bit mode, fallback to 16-bit if controller can't handle it
+ 
