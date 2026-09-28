@@ -10,6 +10,8 @@ This is community bring-up work, not an official ELKS release. It tracks the HP 
 
 **[Release 3.5 is the current HP 200LX ELKS release](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5).** It starts from a clean upstream ELKS baseline and uses HP ROM keyboard services with ELKS's standard IRQ1 scan-code/TTY path. Separate patches cover firmware support, PCMCIA/CF compatibility and the DOS kernel load address.
 
+**Testing:** [Release 3.5.1 beta 1](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5.1-beta1) disables the kernel RAMdisk driver entirely and reduces the image by 1,288 bytes. Build and regression checks pass; HP boot is still pending. It uses a separate `C:\ELKS351` folder and `RUN351B1` launcher with the existing CF root card. [Beta findings and test instructions](https://github.com/l00nix/elks-on-hp200lx/blob/hp200lx-release-3.5.1-beta1/docs/hp200lx/RELEASE3.5.1-BETA1.md). Release 3.5 remains the stable fallback; networking is not enabled in this beta.
+
 Boot, a Minix root mount on `/dev/cfa1`, basic built-in keyboard input, zoom and panning have hardware evidence. The Release 3.5 kernel was rebuilt and verified to change only two version strings from the tested development candidate. Modifiers/repeat, Ctrl-C, timer accuracy, sustained writes and power-management behavior still need validation.
 
 - [Download Release 3.5](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5) — choose `hp200lx-release3.5.zip` for the complete DOS boot folder.
