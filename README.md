@@ -1,3 +1,13 @@
+# ELKS on HP 200LX — FW2A preview
+
+Hardware testing is in progress. [Release and architecture notes](docs/hp200lx/FW2A.md)
+include installation, evidence, limitations and build instructions.
+
+This branch is the clean upstream-based firmware port.
+[Stable Release 3.1 and historical work](https://github.com/l00nix/elks-on-hp200lx/tree/hp200lx) remain on the `hp200lx` branch.
+
+---
+
 ![logo](https://github.com/ghaerr/elks/blob/master/Documentation/img/ELKS-Logo.png)
 
 
