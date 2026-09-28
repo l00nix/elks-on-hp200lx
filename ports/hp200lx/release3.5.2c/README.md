@@ -6,8 +6,8 @@ Follow-up photo 25825 records **over 1,000 task measurements** and task/shared
 written peaks **202/700 and 224/1,024 bytes**; both ROM-region peaks are 168 bytes.
 Shared measurements are 481 from 15,392 calls. Both guards and `unknown` remain
 zero, with 376K free. The user confirms zoom, panning and speed seem fine.
-The exact busy-loop/Ctrl-C procedure is not yet confirmed; these are observed
-peaks, not worst-case guarantees. [Hardware evidence](https://github.com/l00nix/elks-on-hp200lx/blob/codex/hp200lx-release-3.5.2c/docs/hp200lx/hardware-results/2026-09-28-3.5.2c-meminfo.md).
+The user also confirms the busy loop ran and Ctrl-C worked. These are observed
+peaks under that test, not worst-case guarantees. [Hardware evidence](https://github.com/l00nix/elks-on-hp200lx/blob/codex/hp200lx-release-3.5.2c/docs/hp200lx/hardware-results/2026-09-28-3.5.2c-meminfo.md).
 
 
 3.5.2b restored faster screen output with one-in-32 sampling. Photo 25823 recorded
