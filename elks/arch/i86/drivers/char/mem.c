@@ -11,6 +11,10 @@
  */
 
 #include <linuxmt/config.h>
+#ifdef CONFIG_HP200LX_FW
+#include <linuxmt/hp200lx-fw.h>
+#include <arch/irq.h>
+#endif
 
 #ifdef CONFIG_CHAR_DEV_MEM
 
@@ -94,6 +98,18 @@ static int kmem_ioctl(struct inode *inode, struct file *file, int cmd, char *arg
     unsigned short retword;
     struct mem_usage mu;
 
+#ifdef CONFIG_HP200LX_FW
+    if (cmd == MEM_GETHPFW) {
+        struct hpfw_state state;
+        flag_t flags;
+        save_flags(flags);
+        clr_irq();
+        hp200lx_fw_state(&state);
+        restore_flags(flags);
+        memcpy_tofs(arg, &state, sizeof(state));
+        return 0;
+    }
+#endif
     switch (cmd) {
     case MEM_GETTASK:
         retword = (unsigned)task;

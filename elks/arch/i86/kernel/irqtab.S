@@ -225,7 +225,12 @@ doirq:
         jmp     was_trap        // EOI already sent by bios int
 #endif
 
-do_eoi: cmp     $8,%ax          // Send EOI to interrupt controller(s)
+do_eoi:
+#ifdef CONFIG_HP200LX_FW
+        cmp     $2,%ax          // ROM IRQ2 service already sent EOI
+        je      was_trap
+#endif
+        cmp     $8,%ax          // Send EOI to interrupt controller(s)
         mov     $0x20,%al       // EOI
         jb      a6              // IRQ on low chip
 //
@@ -392,7 +397,11 @@ getsp:
 // Halt - wait for next interrupt to save CPU power
         .global idle_halt
 idle_halt:
+#ifdef CONFIG_HP200LX_FW
+        sti                    // retain tested busy idle; power tuning is separate
+#else
         hlt
+#endif
         ret
 
 //------------------------------------------------------------------------------

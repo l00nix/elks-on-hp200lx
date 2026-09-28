@@ -23,6 +23,9 @@
  */
 
 #include <linuxmt/config.h>
+#ifdef CONFIG_HP200LX_FW
+#include <linuxmt/hp200lx-fw.h>
+#endif
 #include <linuxmt/kernel.h>
 #include <linuxmt/sched.h>
 #include <linuxmt/types.h>
@@ -48,14 +51,22 @@ static int kb_read(void);
 #define SCAN_F1		0x3B	/* scan code for F1 key*/
 #define SCAN_KP7	0x47	/* scan code for Keypad 7 key*/
 
+#ifdef CONFIG_HP200LX_FW
+char kbd_name[] = "hp-fw";
+#else
 char kbd_name[] = "scan";
+#endif
 
 /*
  * Include the relevant keymap.
  */
 #include "KeyMaps/keymaps.h"
 
+#ifdef CONFIG_HP200LX_FW
+static int kraw; /* BIOS console has no raw-keyboard ioctl */
+#else
 extern int kraw;
+#endif
 /*
  *	Keyboard state - the poor little keyboard controller hasnt
  *	got the brains to remember itself.
@@ -145,12 +156,21 @@ void kbd_init(void)
     /* Set off the initial keyboard interrupt handler */
     flag_t flags;
 
+#ifdef CONFIG_HP200LX_FW
+    save_flags(flags);
+    clr_irq();
+#endif
     if (request_irq(KBD_IRQ, keyboard_irq, INT_GENERIC))
 	panic("Unable to get keyboard");
 
+#ifndef CONFIG_HP200LX_FW
     save_flags(flags);
     clr_irq();
+#endif
     kb_read();      /* discard any unread keyboard input*/
+#ifdef CONFIG_HP200LX_FW
+    hp200lx_fw_start();
+#endif
     restore_flags(flags);
 
     set_leds();
@@ -187,6 +207,11 @@ static void keyboard_irq(int irq, struct pt_regs *regs)
 
     /* read XT or AT keyboard*/
     code = kb_read();
+#ifdef CONFIG_HP200LX_FW
+    ++hpfw_irq1;
+    hpfw_last_scan = code;
+    if ((code & 0x7f) == 0x70) return; /* ON: no suspend in this beta */
+#endif
 
     if (kraw) {
 	Console_conin(code & 255);
@@ -323,6 +348,13 @@ static void keyboard_irq(int irq, struct pt_regs *regs)
 	mode = ((ModeState & (CAPS|ALT|CTRL|RSHIFT)) >> 1) | (ModeState & LSHIFT);
 	mode = state_code[mode];
 
+#ifdef CONFIG_HP200LX_FW
+        /* HP application keys may exceed the PC keymap. Never read past it. */
+        if ((unsigned)code >= sizeof(xtkb_scan) ||
+            (unsigned)code >= sizeof(xtkb_scan_shifted) ||
+            (unsigned)code >= sizeof(xtkb_scan_caps) ||
+            (unsigned)code >= sizeof(xtkb_scan_ctrl_alt)) return;
+#endif
 	/* Step 3:
 	 * Handle CAPS table specially based on SHIFT status.
 	 */
@@ -407,13 +439,18 @@ static void keyboard_irq(int irq, struct pt_regs *regs)
 /* Read keyboard and acknowledge controller */
 static int kb_read(void)
 {
-    int code, mode;
+    int code;
+#ifndef CONFIG_HP200LX_FW
+    int mode;
+#endif
 
     code = inb_p(KBD_IO);
+#ifndef CONFIG_HP200LX_FW
     mode = inb_p(KBD_CTL);
 
     outb_p((mode | 0x80), KBD_CTL);
     outb_p(mode, KBD_CTL);
+#endif /* no XT port 61h strobe on HP */
 
     return(code);
 }
@@ -468,6 +505,9 @@ static void set_leds(void)
 {
     flag_t flags;
 
+#ifdef CONFIG_HP200LX_FW
+    return; /* no AT keyboard commands */
+#endif
     if (!(sys_caps & CAP_KBD_LEDS)) return;	/* PC/XT doesn't have LEDs */
 
     save_flags(flags);

@@ -37,7 +37,9 @@
 #define UTS_MACHINE             "ibmpc i8086"
 
 /* temp always enable experimental PS/2 mouse driver for IBM PC */
+#ifndef CONFIG_HP200LX_FW
 #define CONFIG_MOUSE_PS2
+#endif
 
 /* The following can be set for minimal systems or for QEMU emulation testing:
  * 10 buffers (@20 = 200), 2 ttyq (@80 = 160), 4k L1 cache, 512 heap free,

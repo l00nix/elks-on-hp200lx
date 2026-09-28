@@ -54,7 +54,11 @@
 void enable_timer_tick(void)
 {
     /* set the clock frequency */
+#ifdef CONFIG_HP200LX_FW
+    outb (0x36, TIMER_CMDS_PORT); /* HP TIMER0: mode 3, as tested in FW1D3 */
+#else
     outb (TIMER_MODE2, TIMER_CMDS_PORT);
+#endif
 
 #if defined(CONFIG_ARCH_IBMPC) || defined(CONFIG_ARCH_SOLO86)
     outb (TIMER_LO_BYTE, TIMER_DATA_PORT);      /* LSB */

@@ -129,7 +129,7 @@ include/linuxmt/compiler-generated.h:
 	printf > include/linuxmt/compiler-generated.h		\
 		'#define UTS_RELEASE %s\n' "\"$(DIST)\""
 	printf >> include/linuxmt/compiler-generated.h		\
-		'#define UTS_VERSION %s\n' "\"$(shell git log --abbrev-commit | head -1 | sed 's/commit/commit/') $(shell date '+%d %b %Y %T %z')\""
+		'#define UTS_VERSION %s\n' "\"hp200lx-fw2 2026-09-28\""
 
 #########################################################################
 # Specification files for archives.

@@ -221,6 +221,10 @@ static void INITPROC early_kernel_init(void)
     /* now able to add umb memory segments */
     for (p = opts.umbseg; p < &opts.umbseg[MAX_UMB]; p++) {
         if (p->base) {
+#ifdef CONFIG_HP200LX_FW
+            if (p->base < 0xa000 && (unsigned long)p->base + p->len > 0x9000)
+                panic("HPFW umb overlaps BIOS RAM");
+#endif
             debug("umb segment from %x to %x\n", p->base, p->base + p->len);
             seg_add(p->base, p->base + p->len);
             umbtotal += p->len;

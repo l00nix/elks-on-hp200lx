@@ -58,6 +58,9 @@ unsigned int INITPROC setup_arch(void)
     debug("endbss %x heap %x kdata size %x\n", endbss, heapsize, (membase-kernel_ds)<<4);
 
     memend = SETUP_MEM_KBYTES << 6;
+#ifdef CONFIG_HP200LX_FW
+    if (memend > 0x9000) memend = 0x9000; /* reserve 9000:0000-9fff:ffff */
+#endif
 
 #if defined(CONFIG_RAMDISK_SEGMENT) && (CONFIG_RAMDISK_SEGMENT > 0)
     if (CONFIG_RAMDISK_SEGMENT <= memend) {

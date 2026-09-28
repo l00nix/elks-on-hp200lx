@@ -1,4 +1,7 @@
 #include <linuxmt/config.h>
+#ifdef CONFIG_HP200LX_FW
+#include <linuxmt/hp200lx-fw.h>
+#endif
 #include <linuxmt/mm.h>
 #include <linuxmt/sched.h>
 #include <linuxmt/timer.h>
@@ -58,6 +61,9 @@ static void FARPROC calc_cpu_usage(void)
 void timer_tick(int irq, struct pt_regs *regs)
 {
     jiffies++;
+#ifdef CONFIG_HP200LX_FW
+    ++hpfw_irq0;
+#endif
 
 #ifdef CHECK_ISTACK
     delaytick++;

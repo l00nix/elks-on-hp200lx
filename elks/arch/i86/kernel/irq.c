@@ -15,6 +15,9 @@
  */
 
 #include <linuxmt/config.h>
+#ifdef CONFIG_HP200LX_FW
+#include <linuxmt/hp200lx-fw.h>
+#endif
 #include <linuxmt/errno.h>
 #include <linuxmt/init.h>
 #include <linuxmt/kernel.h>
@@ -120,6 +123,10 @@ int free_irq(int irq)
  */
 void INITPROC irq_init(void)
 {
+#ifdef CONFIG_HP200LX_FW
+    clr_irq();
+    hp200lx_fw_prepare();
+#endif
     int_handler_add(IDX_SYSCALL, 0x80, _irqit); /* INT 80 for system calls */
 
 #if defined(CONFIG_ARCH_IBMPC) || defined(CONFIG_ARCH_PC98) || \
@@ -129,8 +136,10 @@ void INITPROC irq_init(void)
     irq_action[IDX_DIVZERO] = div0_handler;     /* INT 0 divide by 0/divide overflow */
     int_handler_add(IDX_DIVZERO, 0x00, _irqit);
 
+#ifndef CONFIG_HP200LX_FW
     irq_action[IDX_NMI] = nmi_handler;          /* INT 2 non-maskable interrupt */
     int_handler_add(IDX_NMI, 0x02, _irqit);
+#endif
 #endif
 
 #if defined(CONFIG_ARCH_NECV25)

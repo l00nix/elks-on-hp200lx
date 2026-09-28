@@ -20,6 +20,10 @@ mainmenu_option next_comment
 		bool '  Scancode keyboard driver'	CONFIG_KEYBOARD_SCANCODE y
 		bool '  Dual-screen console support'    CONFIG_CONSOLE_DUAL n
 	fi
+	if [ "$CONFIG_HP200LX_FW" = "y" ]; then
+		define_bool CONFIG_KEYBOARD_SCANCODE y
+		define_bool CONFIG_KEYMAP_US y
+	fi
 	bool 'Serial Console'	CONFIG_CONSOLE_SERIAL		n
 	if [[ "$CONFIG_CONSOLE_DIRECT" = "y" || "$CONFIG_CONSOLE_BIOS" = "y" ]]; then
 	        bool 'Console ANSI terminal emulation'  CONFIG_EMUL_ANSI  y

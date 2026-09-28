@@ -67,6 +67,10 @@ endif
 #########################################################################
 # Commands.
 
+ifeq ($(CONFIG_HP200LX_FW), y)
+OBJS += hp200lx-fw.o hp200lx-fw-asm.o
+endif
+
 all:	akernel.a
 
 akernel.a: $(OBJS)

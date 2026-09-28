@@ -141,3 +141,6 @@ install: $(PRGS)
 
 clean:
 	$(RM) *.o $(PRGS) $(HOSTPRGS)
+
+hpfw: hpfw.o
+	$(LD) $(LDFLAGS) -maout-heap=1024 -maout-stack=1024 -o hpfw hpfw.o $(LDLIBS)
