@@ -1,0 +1,57 @@
+diff --git a/elks/Makefile b/elks/Makefile
+index 43cfeb03..3f7d69ea 100644
+--- a/elks/Makefile
++++ b/elks/Makefile
+@@ -129,7 +129,7 @@ include/linuxmt/compiler-generated.h:
+ 	printf > include/linuxmt/compiler-generated.h		\
+ 		'#define UTS_RELEASE %s\n' "\"$(DIST)\""
+ 	printf >> include/linuxmt/compiler-generated.h		\
+-		'#define UTS_VERSION %s\n' "\"hp200lx-3.5.2b 2026-09-28\""
++		'#define UTS_VERSION %s\n' "\"hp200lx-3.5.2c 2026-09-28\""
+ 
+ #########################################################################
+ # Specification files for archives.
+diff --git a/elks/arch/i86/kernel/hp200lx-fw-asm.S b/elks/arch/i86/kernel/hp200lx-fw-asm.S
+index 78515b6b..0f8cb975 100644
+--- a/elks/arch/i86/kernel/hp200lx-fw-asm.S
++++ b/elks/arch/i86/kernel/hp200lx-fw-asm.S
+@@ -101,7 +101,7 @@ hp200lx_fw_rom_irq2:
+         jbe .Lentryok
+         mov %ax,6(%bx)
+ .Lentryok:
+-        /* Independent per-stack cadence: first call and then every 32nd.
++        /* Measure every task-stack call; shared stack first and every 32nd.
+          * Keep cheap guard checks on EVERY recognized call. Counters saturate;
+          * cadence is separate so measurement continues after saturation.
+          */
+@@ -109,6 +109,8 @@ hp200lx_fw_rom_irq2:
+         je .Lcounted
+         incw 12(%bx)
+ .Lcounted:
++        cmp $hpfw_stack_task,%bx
++        je .Lsample
+         mov 10(%bx),%ax
+         incw 10(%bx)
+         andw $31,10(%bx)
+diff --git a/elks/arch/i86/kernel/hp200lx-fw.c b/elks/arch/i86/kernel/hp200lx-fw.c
+index 8061686e..72f0b549 100644
+--- a/elks/arch/i86/kernel/hp200lx-fw.c
++++ b/elks/arch/i86/kernel/hp200lx-fw.c
+@@ -34,7 +34,7 @@ void hp200lx_stack_report(void)
+         t[0], t[3], t[1], KSTACK_BYTES, t[2], t[4]);
+     printk("HPST irq  n=%u entry=%u used=%u/%u rom=%u guard=%x\n",
+         i[0], i[3], i[1], INTRSTACK_BYTES, i[2], i[4]);
+-    printk("HPST calls task=%u irq=%u sample=1/32 guard=each\n", t[6], i[6]);
++    printk("HPST calls task=%u irq=%u sample=all/32 guard=each\n", t[6], i[6]);
+     printk("HPST unknown=%u watermark writes; +6B probe; n saturates\n", unknown);
+ }
+ #endif
+@@ -110,7 +110,7 @@ void hp200lx_fw_prepare(void)
+     sys_caps &= ~(CAP_KBD_LEDS | CAP_IRQ2MAP9 | CAP_IRQ8TO15);
+     disable_irq(1);
+     disable_irq(2);
+-    printk("HPR352B ROM %x IRQ2 %x:%x IER %x/%x PIC %x\n",
++    printk("HPR352C ROM %x IRQ2 %x:%x IER %x/%x PIC %x\n",
+         hp_model_revision, hpfw_rom_vector[1], hpfw_rom_vector[0],
+         hornet_read(0x18), hornet_read(0x19), inb(0x21));
+ }

@@ -1,22 +1,18 @@
-# ELKS on HP 200LX — Release 3.5.2b
+# ELKS on HP 200LX — Release 3.5.2c
 
-[Release 3.5.2b](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5.2b)
-reduces ROM stack diagnostic overhead after the previous beta's slow-screen
-report. It measures the first valid call on each stack, then one in 32; guards
-are checked on every valid call. The existing `meminfo` prints four HPST lines,
-including total calls and measured samples. Stack sizes remain 700/1,024 bytes
-and final relocation remains `0340h`. RAMdisk and networking remain disabled.
+[Release 3.5.2c](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5.2c)
+measures every valid task-stack ROM call to improve coverage after 3.5.2b's
+single task sample. Shared-stack sampling remains one in 32 and guards are
+checked on every valid call. `meminfo` prints four HPST lines with
+`sample=all/32`; task sample and call counts should match.
 
-Build and emulator checks pass. Initial hardware result (photo 25823): screen output is reported faster again.
-Task/shared sampled peaks are 82/700 and 222/1,024 bytes, with sample counts
-1/128 from 16/4,082 valid calls. Both guards and `unknown` are zero; meminfo
-reports 79/455K used and 376K free. This supports the overhead explanation but
-is not a timed benchmark or a worst-case stack result. [Recorded evidence](https://github.com/l00nix/elks-on-hp200lx/blob/codex/hp200lx-release-3.5.2b/docs/hp200lx/hardware-results/2026-09-28-3.5.2b-meminfo.md).
-
-Use `C:\ELKS352B` and `RUN352B` with the existing CF root card.
-[Instructions, measurement limits and validation](docs/hp200lx/RELEASE3.5.2B.md).
-[Prior beta hardware evidence](docs/hp200lx/hardware-results/2026-09-28-3.5.2-beta1-meminfo.md).
-Stable 3.5 remains the fallback. DOS-style ON/OFF suspend remains unsupported.
+Build/emulator checks pass; real HP testing for 3.5.2c is pending.
+Use `C:\ELKS352C` and `RUN352C` with the existing CF root card.
+[Instructions and measurement limitations](docs/hp200lx/RELEASE3.5.2C.md).
+[3.5.2b hardware evidence](docs/hp200lx/hardware-results/2026-09-28-3.5.2b-meminfo.md).
+Task/shared stack sizes remain 700/1,024 bytes, relocation 0340h. RAMdisk and
+networking remain disabled; DOS-style ON/OFF suspend remains unsupported.
+Stable 3.5 remains stable. Keep 3.5.2b as the recent working diagnostic fallback.
 
 ---
 
