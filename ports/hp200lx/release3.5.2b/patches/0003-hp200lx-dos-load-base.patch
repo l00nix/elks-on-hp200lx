@@ -1,0 +1,37 @@
+--- a/elks/include/linuxmt/config.h
++++ b/elks/include/linuxmt/config.h
+@@ -220,7 +220,12 @@
+ #define LOADALL_SEG     0x80        /* LOADALL buffer from 0x800-0x865 on 80286 CPU */
+ #define REL_INITSEG     0x90        /* 0x200 bytes setup data */
+ #define DMASEG          0xB0        /* start of floppy sector buffer */
++#ifdef CONFIG_HP200LX_FW
++/* Retain the 0340h kernel base used by the working HP DOS handoff. */
++#define REL_SYSSEG      0x0340
++#else
+ #define REL_SYSSEG      DMASEGEND   /* kernel code segment */
++#endif
+ #define SETUP_DATA      REL_INITSEG
+ #endif
+ 
+--- a/elks/arch/i86/kernel/hp200lx-fw.c
++++ b/elks/arch/i86/kernel/hp200lx-fw.c
+@@ -76,7 +76,7 @@
+     sys_caps &= ~(CAP_KBD_LEDS | CAP_IRQ2MAP9 | CAP_IRQ8TO15);
+     disable_irq(1);
+     disable_irq(2);
+-    printk("HPFW2 ROM %x IRQ2 %x:%x IER %x/%x PIC %x\n",
++    printk("HPR3.5 ROM %x IRQ2 %x:%x IER %x/%x PIC %x\n",
+         hp_model_revision, hpfw_rom_vector[1], hpfw_rom_vector[0],
+         hornet_read(0x18), hornet_read(0x19), inb(0x21));
+ }
+--- a/elks/Makefile
++++ b/elks/Makefile
+@@ -129,7 +129,7 @@
+ 	printf > include/linuxmt/compiler-generated.h		\
+ 		'#define UTS_RELEASE %s\n' "\"$(DIST)\""
+ 	printf >> include/linuxmt/compiler-generated.h		\
+-		'#define UTS_VERSION %s\n' "\"hp200lx-fw2 2026-09-28\""
++		'#define UTS_VERSION %s\n' "\"hp200lx-r3.5 2026-09-28\""
+ 
+ #########################################################################
+ # Specification files for archives.

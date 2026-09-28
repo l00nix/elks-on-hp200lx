@@ -1,0 +1,95 @@
+diff --git a/elks/Makefile b/elks/Makefile
+index e6d733ec..43cfeb03 100644
+--- a/elks/Makefile
++++ b/elks/Makefile
+@@ -129,7 +129,7 @@ include/linuxmt/compiler-generated.h:
+ 	printf > include/linuxmt/compiler-generated.h		\
+ 		'#define UTS_RELEASE %s\n' "\"$(DIST)\""
+ 	printf >> include/linuxmt/compiler-generated.h		\
+-		'#define UTS_VERSION %s\n' "\"hp200lx-3.5.2-b1 2026-09-28\""
++		'#define UTS_VERSION %s\n' "\"hp200lx-3.5.2b 2026-09-28\""
+ 
+ #########################################################################
+ # Specification files for archives.
+diff --git a/elks/arch/i86/kernel/hp200lx-fw-asm.S b/elks/arch/i86/kernel/hp200lx-fw-asm.S
+index c072149e..78515b6b 100644
+--- a/elks/arch/i86/kernel/hp200lx-fw-asm.S
++++ b/elks/arch/i86/kernel/hp200lx-fw-asm.S
+@@ -101,6 +101,33 @@ hp200lx_fw_rom_irq2:
+         jbe .Lentryok
+         mov %ax,6(%bx)
+ .Lentryok:
++        /* Independent per-stack cadence: first call and then every 32nd.
++         * Keep cheap guard checks on EVERY recognized call. Counters saturate;
++         * cadence is separate so measurement continues after saturation.
++         */
++        cmpw $0xffff,12(%bx)
++        je .Lcounted
++        incw 12(%bx)
++.Lcounted:
++        mov 10(%bx),%ax
++        incw 10(%bx)
++        andw $31,10(%bx)
++        or %ax,%ax
++        je .Lsample
++        push %si                /* skipped sample: guard base and record only */
++        push %bx
++        pushf
++        lcall *hpfw_rom_vector
++        cli
++        mov %ss,%ax
++        mov %ax,%ds
++        pop %bx
++        pop %si
++        cmpw $0x5476,-2(%si)
++        je .Ldone
++        orw $2,8(%bx)
++        jmp .Ldone
++.Lsample:
+         push %si                /* lower bound */
+         push %dx                /* upper bound */
+         push %bx                /* statistics record */
+diff --git a/elks/arch/i86/kernel/hp200lx-fw.c b/elks/arch/i86/kernel/hp200lx-fw.c
+index 50a81079..8061686e 100644
+--- a/elks/arch/i86/kernel/hp200lx-fw.c
++++ b/elks/arch/i86/kernel/hp200lx-fw.c
+@@ -13,18 +13,18 @@
+ #ifdef CONFIG_HP200LX_STACK_DIAG
+ #include <linuxmt/limits.h>
+ /* Assembly record: samples, peak total writes, peak ROM writes, peak entry,
+- * sticky guard flags. Keep each record exactly five 16-bit words. */
+-unsigned short hpfw_stack_task[5], hpfw_stack_irq[5];
++ * sticky guard flags, sampling phase, calls. Seven 16-bit words per record. */
++unsigned short hpfw_stack_task[7], hpfw_stack_irq[7];
+ unsigned short hpfw_stack_unknown;
+ extern unsigned short hpfw_istack_guard;
+ 
+ void hp200lx_stack_report(void)
+ {
+-    unsigned short t[5], i[5], unknown, n;
++    unsigned short t[7], i[7], unknown, n;
+     flag_t flags;
+     save_flags(flags);
+     clr_irq();
+-    for (n = 0; n < 5; ++n) {
++    for (n = 0; n < 7; ++n) {
+         t[n] = hpfw_stack_task[n];
+         i[n] = hpfw_stack_irq[n];
+     }
+@@ -34,6 +34,7 @@ void hp200lx_stack_report(void)
+         t[0], t[3], t[1], KSTACK_BYTES, t[2], t[4]);
+     printk("HPST irq  n=%u entry=%u used=%u/%u rom=%u guard=%x\n",
+         i[0], i[3], i[1], INTRSTACK_BYTES, i[2], i[4]);
++    printk("HPST calls task=%u irq=%u sample=1/32 guard=each\n", t[6], i[6]);
+     printk("HPST unknown=%u watermark writes; +6B probe; n saturates\n", unknown);
+ }
+ #endif
+@@ -109,7 +110,7 @@ void hp200lx_fw_prepare(void)
+     sys_caps &= ~(CAP_KBD_LEDS | CAP_IRQ2MAP9 | CAP_IRQ8TO15);
+     disable_irq(1);
+     disable_irq(2);
+-    printk("HPR352B1 ROM %x IRQ2 %x:%x IER %x/%x PIC %x\n",
++    printk("HPR352B ROM %x IRQ2 %x:%x IER %x/%x PIC %x\n",
+         hp_model_revision, hpfw_rom_vector[1], hpfw_rom_vector[0],
+         hornet_read(0x18), hornet_read(0x19), inb(0x21));
+ }

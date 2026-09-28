@@ -1,0 +1,626 @@
+--- a/elks/Makefile
++++ b/elks/Makefile
+@@ -129,7 +129,7 @@
+ 	printf > include/linuxmt/compiler-generated.h		\
+ 		'#define UTS_RELEASE %s\n' "\"$(DIST)\""
+ 	printf >> include/linuxmt/compiler-generated.h		\
+-		'#define UTS_VERSION %s\n' "\"$(shell git log --abbrev-commit | head -1 | sed 's/commit/commit/') $(shell date '+%d %b %Y %T %z')\""
++		'#define UTS_VERSION %s\n' "\"hp200lx-fw2 2026-09-28\""
+ 
+ #########################################################################
+ # Specification files for archives.
+--- a/elks/arch/i86/drivers/char/config.in
++++ b/elks/arch/i86/drivers/char/config.in
+@@ -19,6 +19,10 @@
+ 		fi
+ 		bool '  Scancode keyboard driver'	CONFIG_KEYBOARD_SCANCODE y
+ 		bool '  Dual-screen console support'    CONFIG_CONSOLE_DUAL n
++	fi
++	if [ "$CONFIG_HP200LX_FW" = "y" ]; then
++		define_bool CONFIG_KEYBOARD_SCANCODE y
++		define_bool CONFIG_KEYMAP_US y
+ 	fi
+ 	bool 'Serial Console'	CONFIG_CONSOLE_SERIAL		n
+ 	if [[ "$CONFIG_CONSOLE_DIRECT" = "y" || "$CONFIG_CONSOLE_BIOS" = "y" ]]; then
+--- a/elks/arch/i86/drivers/char/kbd-scancode.c
++++ b/elks/arch/i86/drivers/char/kbd-scancode.c
+@@ -23,6 +23,9 @@
+  */
+ 
+ #include <linuxmt/config.h>
++#ifdef CONFIG_HP200LX_FW
++#include <linuxmt/hp200lx-fw.h>
++#endif
+ #include <linuxmt/kernel.h>
+ #include <linuxmt/sched.h>
+ #include <linuxmt/types.h>
+@@ -48,14 +51,22 @@
+ #define SCAN_F1		0x3B	/* scan code for F1 key*/
+ #define SCAN_KP7	0x47	/* scan code for Keypad 7 key*/
+ 
++#ifdef CONFIG_HP200LX_FW
++char kbd_name[] = "hp-fw";
++#else
+ char kbd_name[] = "scan";
++#endif
+ 
+ /*
+  * Include the relevant keymap.
+  */
+ #include "KeyMaps/keymaps.h"
+ 
++#ifdef CONFIG_HP200LX_FW
++static int kraw; /* BIOS console has no raw-keyboard ioctl */
++#else
+ extern int kraw;
++#endif
+ /*
+  *	Keyboard state - the poor little keyboard controller hasnt
+  *	got the brains to remember itself.
+@@ -145,12 +156,21 @@
+     /* Set off the initial keyboard interrupt handler */
+     flag_t flags;
+ 
++#ifdef CONFIG_HP200LX_FW
++    save_flags(flags);
++    clr_irq();
++#endif
+     if (request_irq(KBD_IRQ, keyboard_irq, INT_GENERIC))
+ 	panic("Unable to get keyboard");
+ 
++#ifndef CONFIG_HP200LX_FW
+     save_flags(flags);
+     clr_irq();
++#endif
+     kb_read();      /* discard any unread keyboard input*/
++#ifdef CONFIG_HP200LX_FW
++    hp200lx_fw_start();
++#endif
+     restore_flags(flags);
+ 
+     set_leds();
+@@ -187,6 +207,11 @@
+ 
+     /* read XT or AT keyboard*/
+     code = kb_read();
++#ifdef CONFIG_HP200LX_FW
++    ++hpfw_irq1;
++    hpfw_last_scan = code;
++    if ((code & 0x7f) == 0x70) return; /* ON: no suspend in this beta */
++#endif
+ 
+     if (kraw) {
+ 	Console_conin(code & 255);
+@@ -323,6 +348,13 @@
+ 	mode = ((ModeState & (CAPS|ALT|CTRL|RSHIFT)) >> 1) | (ModeState & LSHIFT);
+ 	mode = state_code[mode];
+ 
++#ifdef CONFIG_HP200LX_FW
++        /* HP application keys may exceed the PC keymap. Never read past it. */
++        if ((unsigned)code >= sizeof(xtkb_scan) ||
++            (unsigned)code >= sizeof(xtkb_scan_shifted) ||
++            (unsigned)code >= sizeof(xtkb_scan_caps) ||
++            (unsigned)code >= sizeof(xtkb_scan_ctrl_alt)) return;
++#endif
+ 	/* Step 3:
+ 	 * Handle CAPS table specially based on SHIFT status.
+ 	 */
+@@ -407,13 +439,18 @@
+ /* Read keyboard and acknowledge controller */
+ static int kb_read(void)
+ {
+-    int code, mode;
++    int code;
++#ifndef CONFIG_HP200LX_FW
++    int mode;
++#endif
+ 
+     code = inb_p(KBD_IO);
++#ifndef CONFIG_HP200LX_FW
+     mode = inb_p(KBD_CTL);
+ 
+     outb_p((mode | 0x80), KBD_CTL);
+     outb_p(mode, KBD_CTL);
++#endif /* no XT port 61h strobe on HP */
+ 
+     return(code);
+ }
+@@ -468,6 +505,9 @@
+ {
+     flag_t flags;
+ 
++#ifdef CONFIG_HP200LX_FW
++    return; /* no AT keyboard commands */
++#endif
+     if (!(sys_caps & CAP_KBD_LEDS)) return;	/* PC/XT doesn't have LEDs */
+ 
+     save_flags(flags);
+--- a/elks/arch/i86/drivers/char/mem.c
++++ b/elks/arch/i86/drivers/char/mem.c
+@@ -11,6 +11,10 @@
+  */
+ 
+ #include <linuxmt/config.h>
++#ifdef CONFIG_HP200LX_FW
++#include <linuxmt/hp200lx-fw.h>
++#include <arch/irq.h>
++#endif
+ 
+ #ifdef CONFIG_CHAR_DEV_MEM
+ 
+@@ -94,6 +98,18 @@
+     unsigned short retword;
+     struct mem_usage mu;
+ 
++#ifdef CONFIG_HP200LX_FW
++    if (cmd == MEM_GETHPFW) {
++        struct hpfw_state state;
++        flag_t flags;
++        save_flags(flags);
++        clr_irq();
++        hp200lx_fw_state(&state);
++        restore_flags(flags);
++        memcpy_tofs(arg, &state, sizeof(state));
++        return 0;
++    }
++#endif
+     switch (cmd) {
+     case MEM_GETTASK:
+         retword = (unsigned)task;
+--- a/elks/arch/i86/kernel/Makefile
++++ b/elks/arch/i86/kernel/Makefile
+@@ -67,6 +67,10 @@
+ #########################################################################
+ # Commands.
+ 
++ifeq ($(CONFIG_HP200LX_FW), y)
++OBJS += hp200lx-fw.o hp200lx-fw-asm.o
++endif
++
+ all:	akernel.a
+ 
+ akernel.a: $(OBJS)
+--- /dev/null
++++ b/elks/arch/i86/kernel/hp200lx-fw-asm.S
+@@ -0,0 +1,59 @@
++/* HP firmware ABI bridges. GPL-2.0-or-later. */
++        .arch i8086, nojumps
++        .code16
++        .text
++
++/* unsigned short hp200lx_fw_detect(void): model/revision DX, or FFFF.
++ * Preserve C callee-saved registers, segments and incoming flags.
++ */
++        .global hp200lx_fw_detect
++hp200lx_fw_detect:
++        pushf
++        push %bp
++        push %bx
++        push %si
++        push %di
++        push %ds
++        push %es
++        mov $0x4dd4,%ax
++        int $0x15
++        mov $0xffff,%ax
++        cmp $0x4850,%bx
++        jne 1f
++        cmp $0x0102,%cx
++        jne 1f
++        mov %dx,%ax
++1:      pop %es
++        pop %ds
++        pop %di
++        pop %si
++        pop %bx
++        pop %bp
++        popf
++        ret
++
++/* Invoke the saved hardware ISR with its expected interrupt stack frame.
++ * _irqit has already switched to an ELKS kernel/interrupt stack.
++ * IRQ2 EOI is issued by ROM; the ELKS return path skips its own IRQ2 EOI.
++ * Leave IF clear until _irqit returns: ROM has already acknowledged IRQ2,
++ * so restoring IF here could let another IRQ2 nest before the stack unwinds.
++ */
++        .global hp200lx_fw_rom_irq2
++hp200lx_fw_rom_irq2:
++        cli
++        push %bp
++        push %bx
++        push %si
++        push %di
++        push %ds
++        push %es
++        pushf
++        lcall *hpfw_rom_vector
++        cli
++        pop %es
++        pop %ds
++        pop %di
++        pop %si
++        pop %bx
++        pop %bp
++        ret
+--- /dev/null
++++ b/elks/arch/i86/kernel/hp200lx-fw.c
+@@ -0,0 +1,139 @@
++/* HP 200LX firmware platform port. GPL-2.0-or-later.
++ * Based on the HP Developer's Guide hardware interface; no Mack code copied.
++ * The original ROM IRQ2 service owns source acknowledgement and PIC EOI.
++ */
++#include <linuxmt/config.h>
++#include <linuxmt/kernel.h>
++#include <linuxmt/memory.h>
++#include <linuxmt/sched.h>
++#include <linuxmt/hp200lx-fw.h>
++#include <arch/io.h>
++#include <arch/irq.h>
++#include <arch/system.h>
++
++#if !defined(CONFIG_ARCH_IBMPC) || !defined(CONFIG_KEYBOARD_SCANCODE) || \
++    !defined(CONFIG_CONSOLE_BIOS) || defined(CONFIG_TIMER_INT0F) || \
++    defined(CONFIG_TIMER_INT1C) || defined(CONFIG_BLK_DEV_BFD) || \
++    defined(CONFIG_BLK_DEV_BHD) || defined(CONFIG_HW_MK88) || \
++    (CONFIG_RAMDISK_SECTORS != 0) || defined(CONFIG_FS_XMS)
++#error HP firmware beta requires IBM PC, BIOS console, scan-code keyboard, native IRQ0, CF root, no XMS
++#endif
++
++volatile unsigned short hpfw_irq0, hpfw_irq1, hpfw_irq2, hpfw_last_scan;
++unsigned short hpfw_rom_vector[2];
++static unsigned short hp_model_revision;
++extern unsigned short hp200lx_fw_detect(void);
++extern void hp200lx_fw_rom_irq2(void);
++
++/* Caller holds interrupts disabled. Restore the shared indexed I/O selector. */
++static unsigned char hornet_read(unsigned char index)
++{
++    unsigned char saved = inb(0x22), value;
++    outb(index, 0x22);
++    value = inb(0x23);
++    outb(saved, 0x22);
++    return value;
++}
++
++static void hornet_write(unsigned char index, unsigned char value)
++{
++    unsigned char saved = inb(0x22);
++    outb(index, 0x22);
++    outb(value, 0x23);
++    outb(saved, 0x22);
++}
++
++/* Refuse DOS-resident hooks: ELKS cannot keep their reclaimed memory alive.
++ * Segment F000 is the documented HP BIOS ROM window for this first beta.
++ */
++static void require_rom(unsigned short offset, unsigned short segment)
++{
++    if (segment != 0xf000 || offset == 0xffff)
++        panic("HPFW non-ROM hook %x:%x", segment, offset);
++}
++
++void hp200lx_fw_prepare(void)
++{
++    unsigned short i, off, seg;
++
++    hp_model_revision = hp200lx_fw_detect();
++    if ((hp_model_revision >> 8) != 2)
++        panic("HPFW requires HP 200LX, model %x", hp_model_revision);
++
++    hpfw_rom_vector[0] = peekw(0x0a * 4, 0);
++    hpfw_rom_vector[1] = peekw(0x0a * 4 + 2, 0);
++    require_rom(hpfw_rom_vector[0], hpfw_rom_vector[1]);
++    /* These firmware vectors must remain executable after DOS is reclaimed. */
++    for (i = 0; i < 2; ++i) {
++        unsigned short vector = i ? 6 : 2;
++        require_rom(peekw(vector * 4, 0), peekw(vector * 4 + 2, 0));
++    }
++    for (i = 0; i < 16; ++i) {
++        off = peekw(0xf7ac + 4 * i, 0x9000);
++        seg = peekw(0xf7ae + 4 * i, 0x9000);
++        require_rom(off, seg);
++    }
++    sys_caps &= ~(CAP_KBD_LEDS | CAP_IRQ2MAP9 | CAP_IRQ8TO15);
++    disable_irq(1);
++    disable_irq(2);
++    printk("HPFW2 ROM %x IRQ2 %x:%x IER %x/%x PIC %x\n",
++        hp_model_revision, hpfw_rom_vector[1], hpfw_rom_vector[0],
++        hornet_read(0x18), hornet_read(0x19), inb(0x21));
++}
++
++static void hp_irq2(int irq, struct pt_regs *regs)
++{
++    ++hpfw_irq2;
++    hp200lx_fw_rom_irq2();
++}
++
++/* One boot-time handoff, called with IF=0 after IRQ0/1/2 installation.
++ * FW1D3 found inherited ISR=01 with no ELKS IRQ activity. Acknowledge only
++ * that exact stale IRQ0, never another interrupt or ongoing ELKS service.
++ * Returning the PIC to IRR read selection matches the BIOS convention.
++ */
++static void hp200lx_fw_handoff(void)
++{
++    unsigned short isr;
++    outb(0x0b, 0x20);
++    isr = inb(0x20);
++    if (isr == 1 && !hpfw_irq0 && !hpfw_irq1 && !hpfw_irq2) {
++        outb(0x60, 0x20); /* specific IRQ0 EOI */
++    }
++    outb(0x0a, 0x20);
++}
++
++/* kbd_init calls this with IF=0, after installing the ELKS IRQ1 handler. */
++void hp200lx_fw_start(void)
++{
++    if (request_irq(2, hp_irq2, INT_GENERIC))
++        panic("HPFW cannot claim IRQ2");
++    /* 18/19 are positive register indices. Preserve pending firmware work;
++     * do not clear interrupt-source flags, reset TIMER1, or scan the matrix.
++     * TIMER1 alone is forced on: BIOS owns KBD enable during debounce.
++     */
++    hornet_write(0x18, hornet_read(0x18) | 0x01);
++    hornet_write(0x19, hornet_read(0x19) | 0x08);
++    outb((inb(0x61) | 0x40) & ~0x80, 0x61);
++    enable_irq(0);
++    enable_irq(1);
++    enable_irq(2);
++    hp200lx_fw_handoff();
++}
++
++void hp200lx_fw_state(struct hpfw_state *s)
++{
++    /* Called by /dev/kmem ioctl with IF=0 for a coherent snapshot. */
++    s->version = HPFW_VERSION;
++    s->model_revision = hp_model_revision;
++    s->irq0 = hpfw_irq0;
++    s->irq1 = hpfw_irq1;
++    s->irq2 = hpfw_irq2;
++    s->last_scan = hpfw_last_scan;
++    s->pic_mask = inb(0x21);
++    s->ier0 = hornet_read(0x18);
++    s->ier1 = hornet_read(0x19);
++    s->ppi = inb(0x61);
++    s->rom_off = hpfw_rom_vector[0];
++    s->rom_seg = hpfw_rom_vector[1];
++}
+--- a/elks/arch/i86/kernel/irq.c
++++ b/elks/arch/i86/kernel/irq.c
+@@ -15,6 +15,9 @@
+  */
+ 
+ #include <linuxmt/config.h>
++#ifdef CONFIG_HP200LX_FW
++#include <linuxmt/hp200lx-fw.h>
++#endif
+ #include <linuxmt/errno.h>
+ #include <linuxmt/init.h>
+ #include <linuxmt/kernel.h>
+@@ -120,6 +123,10 @@
+  */
+ void INITPROC irq_init(void)
+ {
++#ifdef CONFIG_HP200LX_FW
++    clr_irq();
++    hp200lx_fw_prepare();
++#endif
+     int_handler_add(IDX_SYSCALL, 0x80, _irqit); /* INT 80 for system calls */
+ 
+ #if defined(CONFIG_ARCH_IBMPC) || defined(CONFIG_ARCH_PC98) || \
+@@ -129,8 +136,10 @@
+     irq_action[IDX_DIVZERO] = div0_handler;     /* INT 0 divide by 0/divide overflow */
+     int_handler_add(IDX_DIVZERO, 0x00, _irqit);
+ 
++#ifndef CONFIG_HP200LX_FW
+     irq_action[IDX_NMI] = nmi_handler;          /* INT 2 non-maskable interrupt */
+     int_handler_add(IDX_NMI, 0x02, _irqit);
++#endif
+ #endif
+ 
+ #if defined(CONFIG_ARCH_NECV25)
+--- a/elks/arch/i86/kernel/irqtab.S
++++ b/elks/arch/i86/kernel/irqtab.S
+@@ -225,7 +225,12 @@
+         jmp     was_trap        // EOI already sent by bios int
+ #endif
+ 
+-do_eoi: cmp     $8,%ax          // Send EOI to interrupt controller(s)
++do_eoi:
++#ifdef CONFIG_HP200LX_FW
++        cmp     $2,%ax          // ROM IRQ2 service already sent EOI
++        je      was_trap
++#endif
++        cmp     $8,%ax          // Send EOI to interrupt controller(s)
+         mov     $0x20,%al       // EOI
+         jb      a6              // IRQ on low chip
+ //
+@@ -392,7 +397,11 @@
+ // Halt - wait for next interrupt to save CPU power
+         .global idle_halt
+ idle_halt:
++#ifdef CONFIG_HP200LX_FW
++        sti                    // retain tested busy idle; power tuning is separate
++#else
+         hlt
++#endif
+         ret
+ 
+ //------------------------------------------------------------------------------
+--- a/elks/arch/i86/kernel/system.c
++++ b/elks/arch/i86/kernel/system.c
+@@ -58,6 +58,9 @@
+     debug("endbss %x heap %x kdata size %x\n", endbss, heapsize, (membase-kernel_ds)<<4);
+ 
+     memend = SETUP_MEM_KBYTES << 6;
++#ifdef CONFIG_HP200LX_FW
++    if (memend > 0x9000) memend = 0x9000; /* reserve 9000:0000-9fff:ffff */
++#endif
+ 
+ #if defined(CONFIG_RAMDISK_SEGMENT) && (CONFIG_RAMDISK_SEGMENT > 0)
+     if (CONFIG_RAMDISK_SEGMENT <= memend) {
+--- a/elks/arch/i86/kernel/timer-8254.c
++++ b/elks/arch/i86/kernel/timer-8254.c
+@@ -54,7 +54,11 @@
+ void enable_timer_tick(void)
+ {
+     /* set the clock frequency */
++#ifdef CONFIG_HP200LX_FW
++    outb (0x36, TIMER_CMDS_PORT); /* HP TIMER0: mode 3, as tested in FW1D3 */
++#else
+     outb (TIMER_MODE2, TIMER_CMDS_PORT);
++#endif
+ 
+ #if defined(CONFIG_ARCH_IBMPC) || defined(CONFIG_ARCH_SOLO86)
+     outb (TIMER_LO_BYTE, TIMER_DATA_PORT);      /* LSB */
+--- a/elks/arch/i86/kernel/timer.c
++++ b/elks/arch/i86/kernel/timer.c
+@@ -1,4 +1,7 @@
+ #include <linuxmt/config.h>
++#ifdef CONFIG_HP200LX_FW
++#include <linuxmt/hp200lx-fw.h>
++#endif
+ #include <linuxmt/mm.h>
+ #include <linuxmt/sched.h>
+ #include <linuxmt/timer.h>
+@@ -58,6 +61,9 @@
+ void timer_tick(int irq, struct pt_regs *regs)
+ {
+     jiffies++;
++#ifdef CONFIG_HP200LX_FW
++    ++hpfw_irq0;
++#endif
+ 
+ #ifdef CHECK_ISTACK
+     delaytick++;
+--- a/elks/config.in
++++ b/elks/config.in
+@@ -19,6 +19,7 @@
+ 
+ 		bool 'Compaq DeskPro Hardware (fast mode)' CONFIG_HW_COMPAQFAST n
+ 		bool 'MK-88 Hardware (IRQ 3 keyboard)' CONFIG_HW_MK88 n
++		bool 'HP 200LX firmware keyboard' CONFIG_HP200LX_FW n
+ 
+ 		comment 'Devices'
+ 
+--- a/elks/include/linuxmt/config.h
++++ b/elks/include/linuxmt/config.h
+@@ -37,7 +37,9 @@
+ #define UTS_MACHINE             "ibmpc i8086"
+ 
+ /* temp always enable experimental PS/2 mouse driver for IBM PC */
++#ifndef CONFIG_HP200LX_FW
+ #define CONFIG_MOUSE_PS2
++#endif
+ 
+ /* The following can be set for minimal systems or for QEMU emulation testing:
+  * 10 buffers (@20 = 200), 2 ttyq (@80 = 160), 4k L1 cache, 512 heap free,
+--- /dev/null
++++ b/elks/include/linuxmt/hp200lx-fw.h
+@@ -0,0 +1,25 @@
++/* HP 200LX firmware beta diagnostics. GPL-2.0-or-later. */
++#ifndef ELKS_HP200LX_FW_H
++#define ELKS_HP200LX_FW_H
++
++#define MEM_GETHPFW 0x4850
++#define HPFW_VERSION 1
++
++struct hpfw_state {
++    unsigned short version;
++    unsigned short model_revision;
++    unsigned short irq0, irq1, irq2;
++    unsigned short last_scan;
++    unsigned short pic_mask, ier0, ier1, ppi;
++    unsigned short rom_off, rom_seg;
++};
++
++#ifdef __KERNEL__
++extern volatile unsigned short hpfw_irq0, hpfw_irq1, hpfw_irq2;
++extern volatile unsigned short hpfw_last_scan;
++extern unsigned short hpfw_rom_vector[2];
++void hp200lx_fw_prepare(void);
++void hp200lx_fw_start(void);
++void hp200lx_fw_state(struct hpfw_state *state);
++#endif
++#endif
+--- a/elks/include/linuxmt/limits.h
++++ b/elks/include/linuxmt/limits.h
+@@ -16,7 +16,11 @@
+ #endif
+ #endif
+ 
++#ifdef CONFIG_HP200LX_FW
++#define INTRSTACK_BYTES 1024    /* ROM service plus nested timer/keyboard */
++#else
+ #define INTRSTACK_BYTES 512     /* Size of interrupt stack */
++#endif
+ 
+ #define IDLESTACK_BYTES 160     /* Size of idle task stack (min 128) */
+ 
+--- a/elks/init/main.c
++++ b/elks/init/main.c
+@@ -221,6 +221,10 @@
+     /* now able to add umb memory segments */
+     for (p = opts.umbseg; p < &opts.umbseg[MAX_UMB]; p++) {
+         if (p->base) {
++#ifdef CONFIG_HP200LX_FW
++            if (p->base < 0xa000 && (unsigned long)p->base + p->len > 0x9000)
++                panic("HPFW umb overlaps BIOS RAM");
++#endif
+             debug("umb segment from %x to %x\n", p->base, p->base + p->len);
+             seg_add(p->base, p->base + p->len);
+             umbtotal += p->len;
+--- a/elkscmd/sys_utils/Makefile
++++ b/elkscmd/sys_utils/Makefile
+@@ -141,3 +141,6 @@
+ 
+ clean:
+ 	$(RM) *.o $(PRGS) $(HOSTPRGS)
++
++hpfw: hpfw.o
++	$(LD) $(LDFLAGS) -maout-heap=1024 -maout-stack=1024 -o hpfw hpfw.o $(LDLIBS)
+--- /dev/null
++++ b/elkscmd/sys_utils/hpfw.c
+@@ -0,0 +1,43 @@
++/* Read-only HP firmware beta diagnostic. GPL-2.0-or-later. */
++#include <stdio.h>
++#include <string.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <sys/ioctl.h>
++#include <linuxmt/hp200lx-fw.h>
++
++int main(int argc, char **argv)
++{
++    struct hpfw_state s;
++    int fd;
++    if (argc == 2 && !strcmp(argv[1], "spin")) {
++        volatile unsigned short n = 0;
++        puts("CPU loop running. Press Ctrl-C; the shell must return promptly.");
++        fflush(stdout);
++        for (;;) ++n;
++    }
++    if (argc != 1) {
++        fprintf(stderr, "Usage: hpfw [spin]\n");
++        return 1;
++    }
++    fd = open("/dev/kmem", O_RDONLY);
++    if (fd < 0) { perror("/dev/kmem"); return 1; }
++    if (ioctl(fd, MEM_GETHPFW, &s) < 0) {
++        perror("HPFW ioctl (requires FW1 kernel)");
++        close(fd);
++        return 1;
++    }
++    close(fd);
++    if (s.version != HPFW_VERSION) {
++        fprintf(stderr, "Unsupported HPFW diagnostic version\n");
++        return 1;
++    }
++    printf("HPFW1 model/revision=%04x ROM IRQ2=%04x:%04x\n",
++        s.model_revision, s.rom_seg, s.rom_off);
++    printf("IRQ0=%u IRQ1=%u IRQ2=%u last_scan=%02x\n",
++        s.irq0, s.irq1, s.irq2, s.last_scan);
++    printf("PIC=%02x IER18=%02x IER19=%02x PPI61=%02x\n",
++        s.pic_mask, s.ier0, s.ier1, s.ppi);
++    puts("Counters wrap at 65536. IRQ0 should advance about 100/sec.");
++    return 0;
++}

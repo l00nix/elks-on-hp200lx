@@ -1,22 +1,17 @@
-# ELKS on HP 200LX — Release 3.5.2 beta 1
+# ELKS on HP 200LX — Release 3.5.2b
 
-[Diagnostic beta notes and test instructions](docs/hp200lx/RELEASE3.5.2-BETA1.md)
-cover HP ROM stack measurements on both task and shared interrupt stacks, in
-response to Greg Haerr's upstream review. Run the existing `meminfo` to print
-`HPST` reports. Boot also prints the three configured relocation stages.
-Task/shared stack sizes remain 700/1,024 bytes; final relocation remains `0340h`.
-The RAMdisk driver and networking remain disabled. Initial hardware testing
-confirms keyboard, zoom/panning and meminfo: task/shared written peaks are
-80/700 and 282/1,024 bytes, with both guards zero and `unknown=0`. Screen output
-is reported much slower; per-call diagnostic overhead is the leading unverified
-explanation. [Hardware evidence and limitations](docs/hp200lx/hardware-results/2026-09-28-3.5.2-beta1-meminfo.md).
+[Release 3.5.2b](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5.2b)
+reduces ROM stack diagnostic overhead after the previous beta's slow-screen
+report. It measures the first valid call on each stack, then one in 32; guards
+are checked on every valid call. The existing `meminfo` prints four HPST lines,
+including total calls and measured samples. Stack sizes remain 700/1,024 bytes
+and final relocation remains `0340h`. RAMdisk and networking remain disabled.
 
-[Download the beta](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5.2-beta1)
-or use the source kit in `ports/hp200lx/release3.5.2-beta1/`.
-[Release 3.5](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5)
-remains stable. The previous [3.5.1 beta](docs/hp200lx/RELEASE3.5.1-BETA1.md)
-has confirmed boot, CF root, basic commands, keyboard, zoom and panning on hardware.
-DOS-style ON/OFF suspend remains a known limitation.
+Build and emulator checks pass; real HP results for 3.5.2b are pending.
+Use `C:\ELKS352B` and `RUN352B` with the existing CF root card.
+[Instructions, measurement limits and validation](docs/hp200lx/RELEASE3.5.2B.md).
+[Prior beta hardware evidence](docs/hp200lx/hardware-results/2026-09-28-3.5.2-beta1-meminfo.md).
+Stable 3.5 remains the fallback. DOS-style ON/OFF suspend remains unsupported.
 
 ---
 
