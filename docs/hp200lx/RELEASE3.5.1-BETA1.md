@@ -1,7 +1,10 @@
 # HP 200LX Release 3.5.1 beta 1 — remove the kernel RAMdisk driver
 
 28 September 2026. **Hardware-test beta; Release 3.5 remains the stable release.**
-This beta is built and checked, but has not yet been booted on the HP 200LX.
+Photo 25811 confirms boot through the DOS handoff, a Minix root mount on
+`/dev/cfa1`, and a shell prompt on the HP 200LX. The kernel RAMdisk line is
+absent. Keyboard operation, zoom/panning and `meminfo` are not established by
+this photograph. See [hardware result](hardware-results/2026-09-28-3.5.1-beta1-boot.md).
 
 ## Change and purpose
 
@@ -18,8 +21,9 @@ reserved at `0x90000–0x9FFFF`. Root is still the Minix partition `/dev/cfa1`.
 
 The earlier MEMLAB6/7 attempts were recorded as hanging at the DOS loader's
 copy/jump handoff. The working MEMLAB16 fix retained the driver with zero
-sectors. Those results motivate a real hardware regression test; this build
-does not establish that the old loader problem is solved.
+sectors. The new photograph confirms that this beta passes that handoff on this unit.
+It does not establish the exact cause of the older failures or reliability
+across repeated boots.
 
 ## Measured space savings
 
