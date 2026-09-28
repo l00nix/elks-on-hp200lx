@@ -6,7 +6,12 @@ single task sample. Shared-stack sampling remains one in 32 and guards are
 checked on every valid call. `meminfo` prints four HPST lines with
 `sample=all/32`; task sample and call counts should match.
 
-Build/emulator checks pass; real HP testing for 3.5.2c is pending.
+Build/emulator checks pass. Photo 25824 confirms **8 measured task calls out of 8**, with task/shared peaks
+82/700 and 222/1,024 bytes. Shared samples are 148 from 4,735 calls. Both guards
+and `unknown` are zero; meminfo reports 376K free. The `sample=all/32` mode is
+working in this run. Longer workload coverage and an explicit speed/control
+report remain pending. [Hardware evidence](https://github.com/l00nix/elks-on-hp200lx/blob/codex/hp200lx-release-3.5.2c/docs/hp200lx/hardware-results/2026-09-28-3.5.2c-meminfo.md).
+
 Use `C:\ELKS352C` and `RUN352C` with the existing CF root card.
 [Instructions and measurement limitations](docs/hp200lx/RELEASE3.5.2C.md).
 [3.5.2b hardware evidence](docs/hp200lx/hardware-results/2026-09-28-3.5.2b-meminfo.md).

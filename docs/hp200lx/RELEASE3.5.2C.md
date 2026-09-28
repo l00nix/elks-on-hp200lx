@@ -1,6 +1,13 @@
 # HP 200LX Release 3.5.2c — full task-stack ROM coverage
 
-**Diagnostic prerelease. Hardware results for 3.5.2c are pending. Stable 3.5 remains stable.**
+**Diagnostic prerelease. Initial HP stack measurements received. Stable 3.5 remains stable.**
+
+Photo 25824 confirms **8 measured task calls out of 8**, with task/shared peaks
+82/700 and 222/1,024 bytes. Shared samples are 148 from 4,735 calls. Both guards
+and `unknown` are zero; meminfo reports 376K free. The `sample=all/32` mode is
+working in this run. Longer workload coverage and an explicit speed/control
+report remain pending. [Hardware evidence](https://github.com/l00nix/elks-on-hp200lx/blob/codex/hp200lx-release-3.5.2c/docs/hp200lx/hardware-results/2026-09-28-3.5.2c-meminfo.md).
+
 
 3.5.2b restored faster screen output with one-in-32 sampling. Photo 25823 recorded
 16 task-stack calls but only one measured sample; the shared path had 4,082 calls
