@@ -1,6 +1,6 @@
 # HP 200LX Release 3.5.2 beta 1 — measure the firmware stack
 
-28 September 2026. **Diagnostic prerelease; real HP boot and measurements pending.**
+28 September 2026. **Diagnostic prerelease; initial HP measurements received, screen-output slowdown reported.**
 Release 3.5 remains stable. This builds on the hardware-tested 3.5.1 beta without
 the RAMdisk driver. Networking and DOS-style ON/OFF suspend remain unsupported
 in this configuration.
@@ -133,7 +133,14 @@ further space-saving release.
   HP/non-HP/PC98 relocation checks, patch reconstruction and ZIP checks pass.
 
 These tests use a synthetic ROM and do not emulate a complete HP boot or measure
-real ROM stack demand. Hardware results for this beta remain pending.
+real ROM stack demand. The subsequent hardware report confirms keyboard,
+zoom/panning and meminfo operation. Photo 25821 records task `used=80/700`,
+shared `used=282/1024`, both guards zero and `unknown=0`; memory is 79/453K
+used and 374K free. Screen output is reported much slower, with per-call probe
+overhead the leading unverified explanation. These are initial observations,
+not a worst-case result or a performance fix. See the
+[hardware evidence and limitations](https://github.com/l00nix/elks-on-hp200lx/blob/hp200lx-release-3.5.2-beta1/docs/hp200lx/hardware-results/2026-09-28-3.5.2-beta1-meminfo.md).
+The original ZIPs retain their build-time notes and remain unchanged.
 
 The source kit includes pinned upstream
 `69dfd4f274139ef1f533c646711db84902b0cfe4`, five incremental patches, the exact

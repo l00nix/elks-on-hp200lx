@@ -5,7 +5,11 @@ cover HP ROM stack measurements on both task and shared interrupt stacks, in
 response to Greg Haerr's upstream review. Run the existing `meminfo` to print
 `HPST` reports. Boot also prints the three configured relocation stages.
 Task/shared stack sizes remain 700/1,024 bytes; final relocation remains `0340h`.
-The RAMdisk driver and networking remain disabled. Real HP testing is pending.
+The RAMdisk driver and networking remain disabled. Initial hardware testing
+confirms keyboard, zoom/panning and meminfo: task/shared written peaks are
+80/700 and 282/1,024 bytes, with both guards zero and `unknown=0`. Screen output
+is reported much slower; per-call diagnostic overhead is the leading unverified
+explanation. [Hardware evidence and limitations](docs/hp200lx/hardware-results/2026-09-28-3.5.2-beta1-meminfo.md).
 
 [Download the beta](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5.2-beta1)
 or use the source kit in `ports/hp200lx/release3.5.2-beta1/`.
