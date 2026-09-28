@@ -10,7 +10,7 @@ This is community bring-up work, not an official ELKS release. It tracks the HP 
 
 **[FW2A is available as a prerelease](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-fw2a); hardware testing is in progress.** It starts from a clean upstream ELKS baseline and uses HP ROM keyboard services with ELKS's standard IRQ1 scan-code/TTY path. Separate patches cover firmware support, PCMCIA/CF compatibility and the DOS kernel load address.
 
-This exact kernel has hardware evidence for boot, a Minix root mount on `/dev/cfa1`, and basic built-in keyboard input. Zoom/panning, modifiers/repeat, Ctrl-C, timer accuracy and sustained writes still need validation. The tested kernel is unchanged; Release 3.1 remains the stable recommendation.
+This exact kernel has hardware evidence for boot, a Minix root mount on `/dev/cfa1`, basic built-in keyboard input, zoom and panning. Modifiers/repeat, Ctrl-C, timer accuracy and sustained writes still need validation. The tested kernel is unchanged; Release 3.1 remains the stable recommendation.
 
 - [Download FW2A boot packages and complete source kit](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-fw2a)
 - [Clean upstream-based source branch](https://github.com/l00nix/elks-on-hp200lx/tree/hp200lx-fw2a)
