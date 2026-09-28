@@ -17,7 +17,7 @@
 #endif
 
 #ifdef CONFIG_HP200LX_FW
-#define INTRSTACK_BYTES 1024    /* ROM service plus nested timer/keyboard */
+#define INTRSTACK_BYTES 1024    /* HP precaution; ROM requirement not yet measured */
 #else
 #define INTRSTACK_BYTES 512     /* Size of interrupt stack */
 #endif

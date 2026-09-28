@@ -1,0 +1,304 @@
+diff --git a/elks/Makefile b/elks/Makefile
+index 6a4a3fa3..e6d733ec 100644
+--- a/elks/Makefile
++++ b/elks/Makefile
+@@ -129,7 +129,7 @@ include/linuxmt/compiler-generated.h:
+ 	printf > include/linuxmt/compiler-generated.h		\
+ 		'#define UTS_RELEASE %s\n' "\"$(DIST)\""
+ 	printf >> include/linuxmt/compiler-generated.h		\
+-		'#define UTS_VERSION %s\n' "\"hp200lx-3.5.1-b1 2026-09-28\""
++		'#define UTS_VERSION %s\n' "\"hp200lx-3.5.2-b1 2026-09-28\""
+ 
+ #########################################################################
+ # Specification files for archives.
+diff --git a/elks/arch/i86/drivers/char/mem.c b/elks/arch/i86/drivers/char/mem.c
+index 20475588..626fcf60 100644
+--- a/elks/arch/i86/drivers/char/mem.c
++++ b/elks/arch/i86/drivers/char/mem.c
+@@ -127,6 +127,9 @@ static int kmem_ioctl(struct inode *inode, struct file *file, int cmd, char *arg
+         retword = (unsigned)((long)buffer_init >> 16);
+         break;
+     case MEM_GETUSAGE:
++#ifdef CONFIG_HP200LX_STACK_DIAG
++        hp200lx_stack_report(); /* explicit meminfo request, never IRQ logging */
++#endif
+         mm_get_usage(&mu);
+         memcpy_tofs(arg, &mu, sizeof(struct mem_usage));
+         return 0;
+diff --git a/elks/arch/i86/kernel/asm-offsets.c b/elks/arch/i86/kernel/asm-offsets.c
+index d00667be..7d0383f8 100644
+--- a/elks/arch/i86/kernel/asm-offsets.c
++++ b/elks/arch/i86/kernel/asm-offsets.c
+@@ -3,9 +3,15 @@
+ 
+ extern int TASK_KRNL_SP, TASK_USER_DS, TASK_USER_AX, TASK_USER_SS;
+ extern int TASK_USER_BX, TASK_USER_SI, TASK_USER_DI;
++#ifdef CONFIG_HP200LX_STACK_DIAG
++extern int HP_TASK_KSTACK;
++#endif
+ 
+ void asm_offsets(void)
+ {
++#ifdef CONFIG_HP200LX_STACK_DIAG
++    HP_TASK_KSTACK = offsetof(struct task_struct, t_kstack);
++#endif
+     TASK_KRNL_SP = offsetof(struct task_struct, t_ksp);
+     TASK_USER_DS = offsetof(struct task_struct, t_regs.ds);
+     TASK_USER_AX = offsetof(struct task_struct, t_regs.ax);
+@@ -14,4 +20,3 @@ void asm_offsets(void)
+     TASK_USER_SI = offsetof(struct task_struct, t_regs.si);
+     TASK_USER_DI = offsetof(struct task_struct, t_regs.di);
+ }
+-
+diff --git a/elks/arch/i86/kernel/hp200lx-fw-asm.S b/elks/arch/i86/kernel/hp200lx-fw-asm.S
+index 6f2ea34a..c072149e 100644
+--- a/elks/arch/i86/kernel/hp200lx-fw-asm.S
++++ b/elks/arch/i86/kernel/hp200lx-fw-asm.S
+@@ -1,4 +1,9 @@
+ /* HP firmware ABI bridges. GPL-2.0-or-later. */
++#include <linuxmt/config.h>
++#include <linuxmt/limits.h>
++#ifdef CONFIG_HP200LX_STACK_DIAG
++#include <arch/asm-offsets.h>
++#endif
+         .arch i8086, nojumps
+         .code16
+         .text
+@@ -47,9 +52,121 @@ hp200lx_fw_rom_irq2:
+         push %di
+         push %ds
+         push %es
++#ifdef CONFIG_HP200LX_STACK_DIAG
++        /* Paint only unused words below SP. Do not change either stack size
++         * or route the ROM to a different stack. All metadata is per call,
++         * so nested service cannot overwrite another invocation's bounds.
++         * DS=SS is the ELKS kernel calling convention; refuse unknown bounds.
++         */
++        mov %ss,%ax
++        mov %ds,%dx
++        cmp %dx,%ax
++        jne .Lplain
++        mov %sp,%di
++        mov $endistack,%si
++        mov $istack,%dx
++        mov $hpfw_stack_irq,%bx
++        cmp %si,%di
++        jb .Ltask
++        cmp %dx,%di
++        jbe .Lbounds
++.Ltask:
++        mov current,%si
++        cmp idle_task,%si
++        je .Lunknown
++        add $HP_TASK_KSTACK,%si
++        mov %si,%dx
++        add $KSTACK_BYTES,%dx
++        mov $hpfw_stack_task,%bx
++.Lbounds:
++        test $1,%di
++        jnz .Lunknown
++        cmp %dx,%di
++        ja .Lunknown
++        mov %si,%ax
++        add $64,%ax
++        cmp %ax,%di
++        jb .Lunknown
++        cmpw $0x5476,-2(%si)
++        je .Lguardok
++        orw $1,8(%bx)
++.Lguardok:
++        /* entry = use before the original bridge's six saved registers. */
++        mov %dx,%ax
++        sub %di,%ax
++        cmp $12,%ax
++        jb .Lunknown
++        sub $12,%ax
++        cmp 6(%bx),%ax
++        jbe .Lentryok
++        mov %ax,6(%bx)
++.Lentryok:
++        push %si                /* lower bound */
++        push %dx                /* upper bound */
++        push %bx                /* statistics record */
++        mov %sp,%bp             /* ceiling of painted region */
++        mov %si,%di
++        mov %bp,%cx
++        sub %di,%cx
++        shr $1,%cx
++        mov %ss,%ax
++        mov %ax,%es
++        mov $0xa55a,%ax
++        cld
++        rep stosw
++        pushf
++        lcall *hpfw_rom_vector
++        cli
++        /* BIOS need not preserve DS/ES. Recover them from the ELKS SS. */
++        mov %ss,%ax
++        mov %ax,%ds
++        mov %ax,%es
++        pop %bx
++        pop %dx
++        pop %si
++        mov %sp,%di
++        sub $6,%di              /* original painted ceiling */
++        cmpw $0x5476,-2(%si)
++        je .Lpostguard
++        orw $2,8(%bx)
++.Lpostguard:
++        /* Scan without calls/pushes: do not contaminate the measurement. */
++.Lscan:
++        cmp %di,%si
++        jae .Lfound
++        cmpw $0xa55a,(%si)
++        jne .Lfound
++        add $2,%si
++        jmp .Lscan
++.Lfound:
++        mov %dx,%ax
++        sub %si,%ax
++        cmp 2(%bx),%ax
++        jbe .Ltotalok
++        mov %ax,2(%bx)
++.Ltotalok:
++        sub %si,%di
++        cmp 4(%bx),%di
++        jbe .Lromok
++        mov %di,4(%bx)
++.Lromok:
++        cmpw $0xffff,(%bx)
++        je .Ldone
++        incw (%bx)
++        jmp .Ldone
++.Lunknown:
++        /* Unknown/near-exhausted stack: no painting, retain original call. */
++        cmpw $0xffff,hpfw_stack_unknown
++        je .Lplain
++        incw hpfw_stack_unknown
++.Lplain:
++#endif
+         pushf
+         lcall *hpfw_rom_vector
+         cli
++#ifdef CONFIG_HP200LX_STACK_DIAG
++.Ldone:
++#endif
+         pop %es
+         pop %ds
+         pop %di
+diff --git a/elks/arch/i86/kernel/hp200lx-fw.c b/elks/arch/i86/kernel/hp200lx-fw.c
+index 106a7fda..50a81079 100644
+--- a/elks/arch/i86/kernel/hp200lx-fw.c
++++ b/elks/arch/i86/kernel/hp200lx-fw.c
+@@ -10,6 +10,33 @@
+ #include <arch/io.h>
+ #include <arch/irq.h>
+ #include <arch/system.h>
++#ifdef CONFIG_HP200LX_STACK_DIAG
++#include <linuxmt/limits.h>
++/* Assembly record: samples, peak total writes, peak ROM writes, peak entry,
++ * sticky guard flags. Keep each record exactly five 16-bit words. */
++unsigned short hpfw_stack_task[5], hpfw_stack_irq[5];
++unsigned short hpfw_stack_unknown;
++extern unsigned short hpfw_istack_guard;
++
++void hp200lx_stack_report(void)
++{
++    unsigned short t[5], i[5], unknown, n;
++    flag_t flags;
++    save_flags(flags);
++    clr_irq();
++    for (n = 0; n < 5; ++n) {
++        t[n] = hpfw_stack_task[n];
++        i[n] = hpfw_stack_irq[n];
++    }
++    unknown = hpfw_stack_unknown;
++    restore_flags(flags);
++    printk("HPST task n=%u entry=%u used=%u/%u rom=%u guard=%x\n",
++        t[0], t[3], t[1], KSTACK_BYTES, t[2], t[4]);
++    printk("HPST irq  n=%u entry=%u used=%u/%u rom=%u guard=%x\n",
++        i[0], i[3], i[1], INTRSTACK_BYTES, i[2], i[4]);
++    printk("HPST unknown=%u watermark writes; +6B probe; n saturates\n", unknown);
++}
++#endif
+ 
+ #if !defined(CONFIG_ARCH_IBMPC) || !defined(CONFIG_KEYBOARD_SCANCODE) || \
+     !defined(CONFIG_CONSOLE_BIOS) || defined(CONFIG_TIMER_INT0F) || \
+@@ -56,6 +83,12 @@ void hp200lx_fw_prepare(void)
+ {
+     unsigned short i, off, seg;
+ 
++#ifdef CONFIG_HP200LX_STACK_DIAG
++    hpfw_istack_guard = KSTACK_MAGIC;
++    printk("HPBOOT initial=%x staging=%x reloc=%x stacks=%u/%u\n",
++        DEF_INITSEG, DEF_SYSSEG, REL_SYSSEG, KSTACK_BYTES, INTRSTACK_BYTES);
++#endif
++
+     hp_model_revision = hp200lx_fw_detect();
+     if ((hp_model_revision >> 8) != 2)
+         panic("HPFW requires HP 200LX, model %x", hp_model_revision);
+@@ -76,7 +109,7 @@ void hp200lx_fw_prepare(void)
+     sys_caps &= ~(CAP_KBD_LEDS | CAP_IRQ2MAP9 | CAP_IRQ8TO15);
+     disable_irq(1);
+     disable_irq(2);
+-    printk("HPR351B1 ROM %x IRQ2 %x:%x IER %x/%x PIC %x\n",
++    printk("HPR352B1 ROM %x IRQ2 %x:%x IER %x/%x PIC %x\n",
+         hp_model_revision, hpfw_rom_vector[1], hpfw_rom_vector[0],
+         hornet_read(0x18), hornet_read(0x19), inb(0x21));
+ }
+diff --git a/elks/arch/i86/kernel/irqtab.S b/elks/arch/i86/kernel/irqtab.S
+index 3a60ce05..6ae1ea59 100644
+--- a/elks/arch/i86/kernel/irqtab.S
++++ b/elks/arch/i86/kernel/irqtab.S
+@@ -472,6 +472,11 @@ ssmsg:  .ascii "INVALID SS\0"
+ 
+         .bss
+         .p2align 1
++#ifdef CONFIG_HP200LX_STACK_DIAG
++        .global hpfw_istack_guard
++hpfw_istack_guard:
++        .skip 2,0
++#endif
+ endistack:
+         .skip INTRSTACK_BYTES,0 // interrupt stack
+ istack:
+diff --git a/elks/config.in b/elks/config.in
+index f27fd37f..04c41e98 100644
+--- a/elks/config.in
++++ b/elks/config.in
+@@ -20,6 +20,9 @@ mainmenu_option next_comment
+ 		bool 'Compaq DeskPro Hardware (fast mode)' CONFIG_HW_COMPAQFAST n
+ 		bool 'MK-88 Hardware (IRQ 3 keyboard)' CONFIG_HW_MK88 n
+ 		bool 'HP 200LX firmware keyboard' CONFIG_HP200LX_FW n
++		if [ "$CONFIG_HP200LX_FW" = "y" ]; then
++			bool 'HP ROM stack diagnostics (beta)' CONFIG_HP200LX_STACK_DIAG n
++		fi
+ 
+ 		comment 'Devices'
+ 
+diff --git a/elks/include/linuxmt/hp200lx-fw.h b/elks/include/linuxmt/hp200lx-fw.h
+index 7da15c93..8e72957b 100644
+--- a/elks/include/linuxmt/hp200lx-fw.h
++++ b/elks/include/linuxmt/hp200lx-fw.h
+@@ -21,5 +21,8 @@ extern unsigned short hpfw_rom_vector[2];
+ void hp200lx_fw_prepare(void);
+ void hp200lx_fw_start(void);
+ void hp200lx_fw_state(struct hpfw_state *state);
++#ifdef CONFIG_HP200LX_STACK_DIAG
++void hp200lx_stack_report(void);
++#endif
+ #endif
+ #endif
+diff --git a/elks/include/linuxmt/limits.h b/elks/include/linuxmt/limits.h
+index 2787df1c..00077513 100644
+--- a/elks/include/linuxmt/limits.h
++++ b/elks/include/linuxmt/limits.h
+@@ -17,7 +17,7 @@
+ #endif
+ 
+ #ifdef CONFIG_HP200LX_FW
+-#define INTRSTACK_BYTES 1024    /* ROM service plus nested timer/keyboard */
++#define INTRSTACK_BYTES 1024    /* HP precaution; ROM requirement not yet measured */
+ #else
+ #define INTRSTACK_BYTES 512     /* Size of interrupt stack */
+ #endif

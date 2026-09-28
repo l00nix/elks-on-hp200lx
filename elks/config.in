@@ -20,6 +20,9 @@ mainmenu_option next_comment
 		bool 'Compaq DeskPro Hardware (fast mode)' CONFIG_HW_COMPAQFAST n
 		bool 'MK-88 Hardware (IRQ 3 keyboard)' CONFIG_HW_MK88 n
 		bool 'HP 200LX firmware keyboard' CONFIG_HP200LX_FW n
+		if [ "$CONFIG_HP200LX_FW" = "y" ]; then
+			bool 'HP ROM stack diagnostics (beta)' CONFIG_HP200LX_STACK_DIAG n
+		fi
 
 		comment 'Devices'
 

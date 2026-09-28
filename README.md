@@ -1,16 +1,18 @@
-# ELKS on HP 200LX — Release 3.5.1 beta 1
+# ELKS on HP 200LX — Release 3.5.2 beta 1
 
-[Beta notes and hardware test instructions](docs/hp200lx/RELEASE3.5.1-BETA1.md)
-cover removing the kernel RAMdisk driver. The image is 1,288 bytes smaller than
-Release 3.5. Build checks pass, and photo 25811 confirms HP boot, CF root mount
-and a shell prompt. The user also confirms `ls /`, `cat /etc/issue`, `meminfo`,
-basic keyboard input, zoom and panning work. Recorded memory figures remain
-pending. Networking remains disabled.
+[Diagnostic beta notes and test instructions](docs/hp200lx/RELEASE3.5.2-BETA1.md)
+cover HP ROM stack measurements on both task and shared interrupt stacks, in
+response to Greg Haerr's upstream review. Run the existing `meminfo` to print
+`HPST` reports. Boot also prints the three configured relocation stages.
+Task/shared stack sizes remain 700/1,024 bytes; final relocation remains `0340h`.
+The RAMdisk driver and networking remain disabled. Real HP testing is pending.
 
-Use the configuration and build kit in `ports/hp200lx/release3.5.1-beta1/`.
+[Download the beta](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5.2-beta1)
+or use the source kit in `ports/hp200lx/release3.5.2-beta1/`.
 [Release 3.5](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5)
-remains the stable release and fallback. The source retains the clean upstream
-baseline and existing HP platform/CF support.
+remains stable. The previous [3.5.1 beta](docs/hp200lx/RELEASE3.5.1-BETA1.md)
+has confirmed boot, CF root, basic commands, keyboard, zoom and panning on hardware.
+DOS-style ON/OFF suspend remains a known limitation.
 
 ---
 

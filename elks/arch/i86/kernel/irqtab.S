@@ -472,6 +472,11 @@ ssmsg:  .ascii "INVALID SS\0"
 
         .bss
         .p2align 1
+#ifdef CONFIG_HP200LX_STACK_DIAG
+        .global hpfw_istack_guard
+hpfw_istack_guard:
+        .skip 2,0
+#endif
 endistack:
         .skip INTRSTACK_BYTES,0 // interrupt stack
 istack:

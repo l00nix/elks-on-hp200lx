@@ -127,6 +127,9 @@ static int kmem_ioctl(struct inode *inode, struct file *file, int cmd, char *arg
         retword = (unsigned)((long)buffer_init >> 16);
         break;
     case MEM_GETUSAGE:
+#ifdef CONFIG_HP200LX_STACK_DIAG
+        hp200lx_stack_report(); /* explicit meminfo request, never IRQ logging */
+#endif
         mm_get_usage(&mu);
         memcpy_tofs(arg, &mu, sizeof(struct mem_usage));
         return 0;

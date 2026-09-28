@@ -1,0 +1,11 @@
+{
+  "image_bytes": 62624,
+  "near_text_bytes": 39168,
+  "far_text_bytes": 12624,
+  "data_bytes": 5392,
+  "bss_bytes": 4464,
+  "relocation_bytes": 2816,
+  "sha256": "32a162b2ecbd1b307f19ceb2c970aed4c5b94402adff848f6a15255845f898b1",
+  "ramdisk_driver": "absent",
+  "status": "build checks passed; real HP boot pending"
+}

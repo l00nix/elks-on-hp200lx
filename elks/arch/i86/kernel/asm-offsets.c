@@ -3,9 +3,15 @@
 
 extern int TASK_KRNL_SP, TASK_USER_DS, TASK_USER_AX, TASK_USER_SS;
 extern int TASK_USER_BX, TASK_USER_SI, TASK_USER_DI;
+#ifdef CONFIG_HP200LX_STACK_DIAG
+extern int HP_TASK_KSTACK;
+#endif
 
 void asm_offsets(void)
 {
+#ifdef CONFIG_HP200LX_STACK_DIAG
+    HP_TASK_KSTACK = offsetof(struct task_struct, t_kstack);
+#endif
     TASK_KRNL_SP = offsetof(struct task_struct, t_ksp);
     TASK_USER_DS = offsetof(struct task_struct, t_regs.ds);
     TASK_USER_AX = offsetof(struct task_struct, t_regs.ax);
@@ -14,4 +20,3 @@ void asm_offsets(void)
     TASK_USER_SI = offsetof(struct task_struct, t_regs.si);
     TASK_USER_DI = offsetof(struct task_struct, t_regs.di);
 }
-
