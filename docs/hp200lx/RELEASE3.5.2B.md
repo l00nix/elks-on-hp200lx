@@ -1,6 +1,13 @@
 # HP 200LX Release 3.5.2b — sampled ROM stack diagnostics
 
-**Hardware-test prerelease. Real HP results for 3.5.2b are pending. Stable 3.5 remains the fallback.**
+**Diagnostic prerelease. Initial HP results show faster output and zero reported guard errors. Stable 3.5 remains the fallback.**
+
+Initial hardware result (photo 25823): screen output is reported faster again.
+Task/shared sampled peaks are 82/700 and 222/1,024 bytes, with sample counts
+1/128 from 16/4,082 valid calls. Both guards and `unknown` are zero; meminfo
+reports 79/455K used and 376K free. This supports the overhead explanation but
+is not a timed benchmark or a worst-case stack result. [Recorded evidence](https://github.com/l00nix/elks-on-hp200lx/blob/codex/hp200lx-release-3.5.2b/docs/hp200lx/hardware-results/2026-09-28-3.5.2b-meminfo.md).
+
 
 The previous 3.5.2 beta booted and supported keyboard, zoom/panning and meminfo,
 but screen output became much slower. Photo 25821 recorded task/shared written
@@ -102,7 +109,8 @@ The binary remains below the DOS helper's 64 KiB limit, without padding.
 - The diagnostic-off bridge still matches the previous uninstrumented bytes;
   diagnostic-off platform C compiles. Seven existing ABI/snapshot cases pass.
 - DOS copy/readback and injected file-error/wrong-size cases, relocation checks,
-  patch reconstruction and ZIP checks pass. Real HP testing remains pending.
+  patch reconstruction and ZIP checks pass. Initial HP results are recorded above;
+  longer stress testing remains pending.
 
 The source ZIP contains pinned upstream `69dfd4f274139ef1f533c646711db84902b0cfe4`,
 six incremental patches, exact configuration, DOS helper source and tests.

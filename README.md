@@ -7,7 +7,12 @@ are checked on every valid call. The existing `meminfo` prints four HPST lines,
 including total calls and measured samples. Stack sizes remain 700/1,024 bytes
 and final relocation remains `0340h`. RAMdisk and networking remain disabled.
 
-Build and emulator checks pass; real HP results for 3.5.2b are pending.
+Build and emulator checks pass. Initial hardware result (photo 25823): screen output is reported faster again.
+Task/shared sampled peaks are 82/700 and 222/1,024 bytes, with sample counts
+1/128 from 16/4,082 valid calls. Both guards and `unknown` are zero; meminfo
+reports 79/455K used and 376K free. This supports the overhead explanation but
+is not a timed benchmark or a worst-case stack result. [Recorded evidence](https://github.com/l00nix/elks-on-hp200lx/blob/codex/hp200lx-release-3.5.2b/docs/hp200lx/hardware-results/2026-09-28-3.5.2b-meminfo.md).
+
 Use `C:\ELKS352B` and `RUN352B` with the existing CF root card.
 [Instructions, measurement limits and validation](docs/hp200lx/RELEASE3.5.2B.md).
 [Prior beta hardware evidence](docs/hp200lx/hardware-results/2026-09-28-3.5.2-beta1-meminfo.md).
