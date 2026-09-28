@@ -49,6 +49,16 @@ coexistence. The current IBM-PC NE2K default is IRQ12, which the HP platform
 does not expose; IRQ2 is already owned by the HP firmware. Card resources must
 be established rather than assuming the ordinary-PC defaults fit picoPCMCIA.
 
+## Known limitation: DOS-style ON/OFF
+
+The user reports that ON/OFF does not work as it does under DOS. This matches
+an existing implementation limitation: the HP keyboard path explicitly drops
+scan code `0x70` with the comment "ON: no suspend in this beta". That handling
+is also present in Release 3.5; it was not introduced by removing the RAMdisk.
+Firmware keyboard reuse does not by itself provide DOS-style suspend/resume.
+Power management remains a separate follow-up; this report does not establish
+which additional firmware/power paths will be required. No binary was changed.
+
 ## Install and test
 
 Download `hp200lx-release3.5.1-beta1.zip`. Copy its complete `ELKS351` folder to
