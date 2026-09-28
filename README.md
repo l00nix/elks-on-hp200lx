@@ -6,24 +6,32 @@ This is community bring-up work, not an official ELKS release. It tracks the HP 
 
 ---
 
-## FW2A - HP Firmware Port Preview
+## Release 3.5 - HP Firmware Support
 
-**[FW2A is available as a prerelease](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-fw2a); hardware testing is in progress.** It starts from a clean upstream ELKS baseline and uses HP ROM keyboard services with ELKS's standard IRQ1 scan-code/TTY path. Separate patches cover firmware support, PCMCIA/CF compatibility and the DOS kernel load address.
+**[Release 3.5 is the current HP 200LX ELKS release](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5).** It starts from a clean upstream ELKS baseline and uses HP ROM keyboard services with ELKS's standard IRQ1 scan-code/TTY path. Separate patches cover firmware support, PCMCIA/CF compatibility and the DOS kernel load address.
 
-This exact kernel has hardware evidence for boot, a Minix root mount on `/dev/cfa1`, basic built-in keyboard input, zoom and panning. Modifiers/repeat, Ctrl-C, timer accuracy and sustained writes still need validation. The tested kernel is unchanged; Release 3.1 remains the stable recommendation.
+Boot, a Minix root mount on `/dev/cfa1`, basic built-in keyboard input, zoom and panning have hardware evidence. The Release 3.5 kernel was rebuilt and verified to change only two version strings from the tested development candidate. Modifiers/repeat, Ctrl-C, timer accuracy, sustained writes and power-management behavior still need validation.
 
-- [Download FW2A boot packages and complete source kit](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-fw2a)
-- [Clean upstream-based source branch](https://github.com/l00nix/elks-on-hp200lx/tree/hp200lx-fw2a)
-- [Installation, GentleOS/MINIX inspiration, BIOS approach and validation](https://github.com/l00nix/elks-on-hp200lx/blob/hp200lx-fw2a/docs/hp200lx/FW2A.md)
-- [Draft upstream issue update](https://github.com/l00nix/elks-on-hp200lx/blob/hp200lx-fw2a/docs/hp200lx/FW2A-UPSTREAM-ISSUE-DRAFT.md)
+- [Download Release 3.5](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5) — choose `hp200lx-release3.5.zip` for the complete DOS boot folder.
+- [Release 3.5 source branch](https://github.com/l00nix/elks-on-hp200lx/tree/hp200lx-release-3.5)
+- [Installation, GentleOS/MINIX inspiration, BIOS approach and validation](https://github.com/l00nix/elks-on-hp200lx/blob/hp200lx-release-3.5/docs/hp200lx/RELEASE3.5.md)
+- [Draft upstream issue update](https://github.com/l00nix/elks-on-hp200lx/blob/hp200lx-release-3.5/docs/hp200lx/RELEASE3.5-UPSTREAM-ISSUE-DRAFT.md)
 
-Use `C:\ELKSFW2\RUNFW2A.BAT` with the existing Release 3/3.1 CF root card. See the installation notes before copying files. The standalone ZIP supplies the DOS boot folder, not a new persistent CF root image.
+Copy the complete `ELKS35` folder to `C:\ELKS35`. From fresh DOS outside System Manager, with `STACKS=0,0` and the existing Release 3/3.1 ELKS CF root card, run:
+
+```text
+C:
+CD \ELKS35
+RUNR35
+```
+
+Kernel: `KERNR35`. Boot identifier: `HPR3.5 ROM`. Diagnostic log: `HPR35.TXT`. The boot ZIP does not include the persistent CF root image; existing installations need no CF rewrite. The source and checksums are separate ZIP assets on the release page.
 
 ---
 
 ## Release 3.1 - RAMdisk Memory Fix
 
-**Release 3.1 is the recommended HP 200LX ELKS build.** It keeps the Release 3 PCMCIA/CF persistent root filesystem path, but fixes the unused RAMdisk reservation that left ELKS with much less conventional memory for programs.
+**Release 3.1 is the previous HP 200LX ELKS release; Release 3.5 supersedes it.** It keeps the Release 3 PCMCIA/CF persistent root filesystem path, but fixes the unused RAMdisk reservation that left ELKS with much less conventional memory for programs.
 
 Release 3.1 was validated on real HP 200LX hardware using the MEMLAB16 test build. The kernel now reports:
 
