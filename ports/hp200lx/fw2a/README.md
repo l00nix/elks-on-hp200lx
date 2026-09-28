@@ -1,7 +1,8 @@
 # HP 200LX FW2A — firmware port preview
 
 28 September 2026. **Prerelease; hardware testing is in progress.** FW2A has
-hardware evidence for boot, CF root mounting and basic built-in keyboard input.
+hardware evidence for boot, CF root mounting, basic built-in keyboard input,
+zoom and panning.
 This does not yet replace Release 3.1 as the stable release.
 
 ## How close is this to vanilla ELKS?
@@ -56,11 +57,12 @@ MINIX-on-HP-200LX work; existing component authorship and licenses still apply.
 
 The FW2A photograph (25797) shows `HPFW2A ROM`, ROM IRQ2 service `F000:CF5B`,
 kernel base `0340h`, `/dev/cfa1` mounted as a Minix root filesystem, and a shell
-prompt. The user reported that the keyboard appears to work. Zoom had not yet
-been tested. The unchecked filesystem mount is not evidence of write reliability.
+prompt. The user reported that the keyboard appears to work, then confirmed:
+"Zoom and zoom paning works". Zoom and panning are therefore confirmed on FW2A.
+The unchecked filesystem mount is not evidence of write reliability.
 
 Pending for this exact binary: modifiers, repeat, Ctrl-C, externally timed
-`sleep`, Fn+Space zoom and Menu+arrow panning. Sustained CF writes, RTC setup,
+`sleep`. Sustained CF writes, RTC setup,
 shutdown, suspend and battery behavior are also unvalidated. The previous
 FW1D3 results must not be attributed to FW2A. Busy idle remains enabled and the
 test boot uses `init=/bin/sh`.
@@ -124,7 +126,7 @@ Kernel: `KERNFW2A`, 63,320 bytes, SHA-256:
 ```
 
 The tested kernel, COM files and batch launcher are unchanged by publication.
-ZIP instructions are updated to reflect the boot and keyboard evidence.
+ZIP instructions are updated to reflect the boot, keyboard, zoom and panning evidence.
 `hp200lx-fw2a-checksums.zip` contains the release asset and kernel checksums.
 
 Run `python3 tests/run_platform.py` for platform tests. Run the load-base test

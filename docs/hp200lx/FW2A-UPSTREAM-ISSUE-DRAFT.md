@@ -26,8 +26,9 @@ first clean extraction exposed an early-boot regression at `00B0h`. The exact
 underlying low-memory conflict and inherited IRQ0 state are still being investigated.
 
 On the real HP 200LX, FW2A reaches a shell, mounts `/dev/cfa1` as Minix root,
-and accepts basic built-in keyboard input. Testing is still in progress for
-zoom/panning, modifiers/repeat, Ctrl-C, timer accuracy and sustained writes;
+and accepts basic built-in keyboard input. Zoom and panning have also been
+confirmed on FW2A. Testing is still in progress for modifiers/repeat, Ctrl-C,
+timer accuracy and sustained writes;
 power management is not established. Earlier FW1D3 successes are not being
 claimed for this exact binary. The existing Release 3/3.1 userland is reused.
 
