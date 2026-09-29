@@ -1,6 +1,13 @@
 # HP 200LX Release 3.5.2d — synchronous CF and smaller task stacks
 
-**Diagnostic prerelease. Real HP results for 3.5.2d are pending. Stable 3.5 remains stable.**
+**Diagnostic prerelease. Initial hardware tests passed; stable 3.5 remains stable.**
+
+**Hardware update (29 September):** the user confirms keyboard, zoom/panning,
+screen speed, busy-loop Ctrl-C, CF write/readback across reboot and cleanup work.
+Photos record task/shared written peaks of **202/640 and 222/1,024 bytes**,
+zero guards/unknown, TASK allocation **13,574 bytes** (960 fewer), and 376K free.
+These are observed workload results, not worst-case stack bounds.
+[Hardware evidence](https://github.com/l00nix/elks-on-hp200lx/blob/codex/hp200lx-release-3.5.2d/docs/hp200lx/hardware-results/2026-09-29-3.5.2d-meminfo.md).
 
 Greg Haerr confirmed that the ATA-CF driver uses synchronous programmed I/O and
 does not require `CONFIG_ASYNCIO`. This release disables that option. Upstream
@@ -71,7 +78,7 @@ use the normal syscall interface and do not require a CF rewrite for this test.
 The preceding 3.5.2c hardware test observed task/shared written peaks of
 202/700 and 224/1024 bytes, with zero guards/unknown and working busy-loop
 Ctrl-C. Those are observations under that workload, not worst-case guarantees.
-The smaller task stack must still be tested on the HP.
+The 3.5.2d hardware results above now cover this workload on the HP.
 
 `used` records the deepest written location below stack top; `rom` records
 written depth below probe metadata; `entry` is peak bridge-entry usage. Their
@@ -96,7 +103,7 @@ Compared with 3.5.2c, the image is 296 bytes smaller (62,768 to 62,472).
 Static kernel data+BSS falls by 208 bytes (9,920 to 9,712). The request array
 shrinks from 300 to 20 bytes; other data changes make the net static saving
 208 bytes. Task allocation is separately 60 bytes smaller per slot: 960 bytes
-at the default 16 slots. Runtime free-memory totals await the hardware test.
+at the default 16 slots. Hardware still reports 376K free; the TASK heap row confirms the 960-byte reduction.
 
 - Clean Linux/IA16 GCC 6.3 build; image/header/segment checks, RAMdisk absence,
   networking/ASYNCIO/TRACE disabled, 640-byte task stack, one request entry and

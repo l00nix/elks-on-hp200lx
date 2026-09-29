@@ -5,7 +5,14 @@ disables unnecessary asynchronous block I/O for ATA-CF. Upstream ELKS selects
 640-byte task stacks and one request entry; the shared interrupt stack remains
 1,024 bytes. ROM diagnostics retain all-task/one-in-32-shared sampling and
 guards on every valid call. The image is 296 bytes smaller; task allocation
-saves 960 bytes at the default 16 slots. Hardware testing is pending.
+saves 960 bytes at the default 16 slots.
+
+**Hardware update (29 September):** the user confirms keyboard, zoom/panning,
+screen speed, busy-loop Ctrl-C, CF write/readback across reboot and cleanup work.
+Photos record task/shared written peaks of **202/640 and 222/1,024 bytes**,
+zero guards/unknown, TASK allocation **13,574 bytes** (960 fewer), and 376K free.
+These are observed workload results, not worst-case stack bounds.
+[Hardware evidence](https://github.com/l00nix/elks-on-hp200lx/blob/codex/hp200lx-release-3.5.2d/docs/hp200lx/hardware-results/2026-09-29-3.5.2d-meminfo.md).
 
 Copy the complete **ELKS352D** folder to **`C:\ELKS352D`**, then run **RUN352D**
 from fresh DOS with the existing CF root. **Use `meminfo -s` for this beta**:
