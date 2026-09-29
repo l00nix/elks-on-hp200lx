@@ -1,0 +1,7 @@
+Repository: https://github.com/ghaerr/elks.git
+Commit: 69dfd4f274139ef1f533c646711db84902b0cfe4
+Commit date: 2026-05-13 22:03:12 -0600
+Subject: Merge pull request #2684 from ghaerr/fatbpb331
+upstream.tar SHA-256: f899555813310fbca73f012124d1057437a849e7c38acfaea2cd75147eeaeba9
+Archive made from git objects, excluding all dirty working-tree changes.
+This is the recorded local upstream baseline, not a claim of latest upstream.

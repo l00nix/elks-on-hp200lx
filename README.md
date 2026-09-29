@@ -1,24 +1,26 @@
-# ELKS on HP 200LX — Release 3.5.2c
+# ELKS on HP 200LX — Release 3.5.2d
 
-[Release 3.5.2c](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5.2c)
-measures every valid task-stack ROM call to improve coverage after 3.5.2b's
-single task sample. Shared-stack sampling remains one in 32 and guards are
-checked on every valid call. `meminfo` prints four HPST lines with
-`sample=all/32`; task sample and call counts should match.
+[Release 3.5.2d](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5.2d)
+disables unnecessary asynchronous block I/O for ATA-CF. Upstream ELKS selects
+640-byte task stacks and one request entry; the shared interrupt stack remains
+1,024 bytes. ROM diagnostics retain all-task/one-in-32-shared sampling and
+guards on every valid call. The image is 296 bytes smaller; task allocation
+saves 960 bytes at the default 16 slots. Hardware testing is pending.
 
-Build/emulator checks pass. Follow-up photo 25825 records **over 1,000 task measurements** and task/shared
-written peaks **202/700 and 224/1,024 bytes**; both ROM-region peaks are 168 bytes.
-Shared measurements are 481 from 15,392 calls. Both guards and `unknown` remain
-zero, with 376K free. The user confirms zoom, panning and speed seem fine.
-The user also confirms the busy loop ran and Ctrl-C worked. These are observed
-peaks under that test, not worst-case guarantees. [Hardware evidence](https://github.com/l00nix/elks-on-hp200lx/blob/codex/hp200lx-release-3.5.2c/docs/hp200lx/hardware-results/2026-09-28-3.5.2c-meminfo.md).
+Copy the complete **ELKS352D** folder to **`C:\ELKS352D`**, then run **RUN352D**
+from fresh DOS with the existing CF root. **Use `meminfo -s` for this beta**:
+old `meminfo` process-listing modes and `ps` assume the previous task size.
+The `-s` mode prints system allocations and all four HPST lines; the final
+`Main` line gives overall memory totals. No CF rewrite is required for this test.
+[Installation, validation and compatibility notes](docs/hp200lx/RELEASE3.5.2D.md).
+[BIOS guide findings: keyboard, manual zoom/panning and cursor tracking](docs/hp200lx/BIOS-KEYBOARD-DISPLAY.md).
 
-Use `C:\ELKS352C` and `RUN352C` with the existing CF root card.
-[Instructions and measurement limitations](docs/hp200lx/RELEASE3.5.2C.md).
-[3.5.2b hardware evidence](docs/hp200lx/hardware-results/2026-09-28-3.5.2b-meminfo.md).
-Task/shared stack sizes remain 700/1,024 bytes, relocation 0340h. RAMdisk and
-networking remain disabled; DOS-style ON/OFF suspend remains unsupported.
-Stable 3.5 remains stable. Keep 3.5.2b as the recent working diagnostic fallback.
+Keep 3.5.2c as the working diagnostic fallback: keyboard, zoom/panning, screen
+speed and busy-loop Ctrl-C passed on hardware, with observed written peaks
+202/700 and 224/1024 bytes and no guard errors. Those are not worst-case bounds.
+[3.5.2c evidence](docs/hp200lx/hardware-results/2026-09-28-3.5.2c-meminfo.md).
+Stable 3.5 remains stable. Relocation stays 0340h; RAMdisk and networking remain
+disabled. DOS-style ON/OFF suspend remains unsupported.
 
 ---
 
