@@ -9,6 +9,7 @@ saves 960 bytes at the default 16 slots.
 
 **Hardware update (29 September):** the user confirms keyboard, zoom/panning,
 screen speed, busy-loop Ctrl-C, CF write/readback across reboot and cleanup work.
+`shutdown -r` is also confirmed to reboot the HP 200LX into DOS.
 Photos record task/shared written peaks of **202/640 and 222/1,024 bytes**,
 zero guards/unknown, TASK allocation **13,574 bytes** (960 fewer), and 376K free.
 These are observed workload results, not worst-case stack bounds.

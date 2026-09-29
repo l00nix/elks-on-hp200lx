@@ -60,6 +60,9 @@ Shared samples grow once per 32 valid calls. If either `guard` or `unknown` is
 nonzero, photograph the result and return to the working fallback before more
 stress. For fallback, reboot to DOS and use `C:\ELKS352C` / `RUN352C`.
 Stable fallback remains `C:\ELKS35` / `RUNR35`.
+The user has now confirmed that `shutdown -r` returns this build to DOS.
+For persistence/reboot tests, run `sync`, then `shutdown -r`, then launch
+`RUN352D` again from DOS. ON/OFF suspend remains a separate unsupported feature.
 
 ## Existing CF diagnostic-tool compatibility
 
