@@ -1,0 +1,80 @@
+{
+  "ELKS2M.MNX": {
+    "bytes": 737280,
+    "sha256": "aa14352137de89e6f0355833c9e15f760a934b797e9efd3b0b8a153497f2920d",
+    "original_sha256": "f670a081a3936a6636398f56813c93e57198e4860cf4291ab030834f390368fd",
+    "changed_paths": [
+      "/etc/issue",
+      "/root/ELX.txt"
+    ],
+    "all_other_paths_and_metadata_unchanged": true,
+    "free_bytes": 96256
+  },
+  "ELKS4M.MNX": {
+    "bytes": 3145728,
+    "sha256": "d556ce3190d920ebeaf610e8ac3dbe00ca3225c85134b8fa3502582f49fc7453",
+    "original_sha256": "290b427ab362ecdd9b0bd78cc9109acc5c6b0fafdbed0b8368798d5659ee1da1",
+    "changed_paths": [
+      "/etc/issue",
+      "/root/ELX.txt"
+    ],
+    "all_other_paths_and_metadata_unchanged": true,
+    "free_bytes": 229376
+  },
+  "ELKS4C08.IMG": {
+    "bytes": 7340032,
+    "sha256": "4b5aaa64a5aec6fc65c3679a43881f91ddab44a4aa061fd510b0b0b7c33100aa",
+    "original_sha256": "1eaa3279feb64838a3c0a7fb183779910954a86e2164be02c447890bb392df2d",
+    "changed_paths": [
+      "/linux",
+      "/etc/issue",
+      "/root/RELEASE.TXT",
+      "/root/HOWTO.TXT",
+      "/bootopts"
+    ],
+    "all_other_paths_and_metadata_unchanged": true,
+    "free_bytes": 4250624
+  },
+  "ELKS4C16.IMG": {
+    "bytes": 14680064,
+    "sha256": "a11e8ba441e4dcb6353144b031123bd5adc53e93746d447dac3efaffee8eded0",
+    "original_sha256": "c5280e7e2ece5911181ced5d4f2f38f14f82cf5e743a308932a21fb72b4790cf",
+    "changed_paths": [
+      "/linux",
+      "/etc/issue",
+      "/root/RELEASE.TXT",
+      "/root/HOWTO.TXT",
+      "/bootopts"
+    ],
+    "all_other_paths_and_metadata_unchanged": true,
+    "free_bytes": 11590656
+  },
+  "ELKS4C32.IMG": {
+    "bytes": 31457280,
+    "sha256": "e36b0773cc10e0166e3c37f9cf04f821dff8b5f8c322193e1ae039f07316e117",
+    "original_sha256": "5d67f8eb076ebce909087d19dd188ddc69bfefb4e8b9ba26fc5fa2c7c6a36763",
+    "changed_paths": [
+      "/linux",
+      "/etc/issue",
+      "/root/RELEASE.TXT",
+      "/root/HOWTO.TXT",
+      "/bootopts"
+    ],
+    "all_other_paths_and_metadata_unchanged": true,
+    "free_bytes": 28367872
+  },
+  "ELKS4C64.IMG": {
+    "bytes": 62914560,
+    "sha256": "66691bcf273dc8e65d6d5d06812665d616bd242eefd7dbca457cb1041221a5f7",
+    "original_sha256": "da59d89415272039f7eca1c4e9c9d871883f95f923b8bd88f3530dbf2ad97b7d",
+    "changed_paths": [
+      "/linux",
+      "/etc/issue",
+      "/root/RELEASE.TXT",
+      "/root/HOWTO.TXT",
+      "/bootopts"
+    ],
+    "all_other_paths_and_metadata_unchanged": true,
+    "free_bytes": 59825152
+  }
+}

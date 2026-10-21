@@ -1,9 +1,8 @@
 # Release 4.0 CF images and offline growth
 
-Release 4.0 preserves the four candidate-1 image bytes. Use the separate 4.0 boot
-ZIP (FINAL2b) in C:\ELKS39FB; any older embedded /linux or release banner is
-historical. The DOS loader selects the kernel from C:, not /linux on the card.
-CF images include the tested ELX utility updates and corrected HP Nano-X suite.
+Use the matching 4.0 boot ZIP in C:\ELKS4. The images contain 4.0 release
+banners and a matching /linux kernel copy; DOS selects the running kernel from C:.
+Application payloads and filesystem geometry remain as tested.
 
 All profiles use one Minix V1 partition starting at sector 63, 1 KiB blocks,
 14-character names and 2048 inodes (1561 initially free). Growth adds data space,
@@ -27,7 +26,7 @@ Python 3.9 or newer, with no third-party packages, is sufficient. Keep
 `grow_cf.py` and `minix.py` together:
 
 ```sh
-python3 grow_cf.py R4C108.IMG my64.img --card-mb 64
+python3 grow_cf.py ELKS4C08.IMG my64.img --card-mb 64
 ```
 
 Choose `16`, `32` or `64` as appropriate. The output must not already exist.
@@ -82,4 +81,5 @@ not imply physical high-zone testing on every capacity/card combination.
 
 Image build sources and exact pinned inputs are included in the image-tools ZIP.
 The historical candidate reports are preserved as provenance, not current
-installation instructions. Images themselves are unchanged for the 4.0 promotion.
+installation instructions. The naming refresh updates only release documentation and the unused /linux
+copy; file-by-file comparisons verify all other contents and metadata.

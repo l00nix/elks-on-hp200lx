@@ -38,3 +38,13 @@ Raw chronological hardware notes remain in the project acceptance archive.
 The release source includes frozen software-validation reports. Earlier reports
 marked “hardware pending” retain their original dates; this acceptance summary
 supersedes that status, without changing historical evidence.
+
+## 4.0 naming refresh — 21 October 2026
+
+The current boot folder is C:\ELKS4. Both rebuilt kernels differ from the
+accepted candidate only in version strings; symbol maps and executable code
+are identical. Current hashes are in the release MANIFEST.json. Image banners
+and documentation were updated, and the unused CF /linux copy matches 4.0.
+All other image paths, permissions, ownership, links and geometry were verified
+unchanged. Each refreshed filesystem passed a forced read-only offline check.
+The original hardware identities above are retained as historical evidence.

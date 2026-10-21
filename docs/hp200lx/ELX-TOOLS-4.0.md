@@ -1,6 +1,6 @@
 # ELX tools in Release 4.0
 
-CF images already contain the tested updates. The unchanged local MNX images
+CF images already contain the tested updates. The local MNX images
 contain earlier builds; use `hp200lx-4.0-elx-tools.zip` to update those or an older
 filesystem. These executables run under ELKS, not DOS.
 

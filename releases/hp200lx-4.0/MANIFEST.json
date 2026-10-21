@@ -1,56 +1,151 @@
 {
   "package": "HP 200LX 4.0",
   "upstream": "ELKS 0.9.2",
-  "promoted_build": "3.9 FINAL2b",
+  "build": "4.0",
+  "revision": "naming-refresh-20261021",
   "date": "2026-10-21",
   "acceptance": "Maintainer closed hardware acceptance including sleep guards on 2026-10-21",
-  "binaries_rebuilt": false,
-  "filesystem_bytes_changed": false,
-  "boot_folder": "ELKS39FB",
+  "binaries_rebuilt": true,
+  "filesystem_bytes_changed": true,
+  "binary_comparison": {
+    "local": {
+      "old_bytes": 82384,
+      "new_bytes": 82384,
+      "only_version_text_changed": true,
+      "symbol_map_identical": true
+    },
+    "cf": {
+      "old_bytes": 78744,
+      "new_bytes": 78744,
+      "only_version_text_changed": true,
+      "symbol_map_identical": true
+    }
+  },
+  "image_changes": {
+    "ELKS2M.MNX": {
+      "bytes": 737280,
+      "sha256": "aa14352137de89e6f0355833c9e15f760a934b797e9efd3b0b8a153497f2920d",
+      "original_sha256": "f670a081a3936a6636398f56813c93e57198e4860cf4291ab030834f390368fd",
+      "changed_paths": [
+        "/etc/issue",
+        "/root/ELX.txt"
+      ],
+      "all_other_paths_and_metadata_unchanged": true,
+      "free_bytes": 96256
+    },
+    "ELKS4M.MNX": {
+      "bytes": 3145728,
+      "sha256": "d556ce3190d920ebeaf610e8ac3dbe00ca3225c85134b8fa3502582f49fc7453",
+      "original_sha256": "290b427ab362ecdd9b0bd78cc9109acc5c6b0fafdbed0b8368798d5659ee1da1",
+      "changed_paths": [
+        "/etc/issue",
+        "/root/ELX.txt"
+      ],
+      "all_other_paths_and_metadata_unchanged": true,
+      "free_bytes": 229376
+    },
+    "ELKS4C08.IMG": {
+      "bytes": 7340032,
+      "sha256": "4b5aaa64a5aec6fc65c3679a43881f91ddab44a4aa061fd510b0b0b7c33100aa",
+      "original_sha256": "1eaa3279feb64838a3c0a7fb183779910954a86e2164be02c447890bb392df2d",
+      "changed_paths": [
+        "/linux",
+        "/etc/issue",
+        "/root/RELEASE.TXT",
+        "/root/HOWTO.TXT",
+        "/bootopts"
+      ],
+      "all_other_paths_and_metadata_unchanged": true,
+      "free_bytes": 4250624
+    },
+    "ELKS4C16.IMG": {
+      "bytes": 14680064,
+      "sha256": "a11e8ba441e4dcb6353144b031123bd5adc53e93746d447dac3efaffee8eded0",
+      "original_sha256": "c5280e7e2ece5911181ced5d4f2f38f14f82cf5e743a308932a21fb72b4790cf",
+      "changed_paths": [
+        "/linux",
+        "/etc/issue",
+        "/root/RELEASE.TXT",
+        "/root/HOWTO.TXT",
+        "/bootopts"
+      ],
+      "all_other_paths_and_metadata_unchanged": true,
+      "free_bytes": 11590656
+    },
+    "ELKS4C32.IMG": {
+      "bytes": 31457280,
+      "sha256": "e36b0773cc10e0166e3c37f9cf04f821dff8b5f8c322193e1ae039f07316e117",
+      "original_sha256": "5d67f8eb076ebce909087d19dd188ddc69bfefb4e8b9ba26fc5fa2c7c6a36763",
+      "changed_paths": [
+        "/linux",
+        "/etc/issue",
+        "/root/RELEASE.TXT",
+        "/root/HOWTO.TXT",
+        "/bootopts"
+      ],
+      "all_other_paths_and_metadata_unchanged": true,
+      "free_bytes": 28367872
+    },
+    "ELKS4C64.IMG": {
+      "bytes": 62914560,
+      "sha256": "66691bcf273dc8e65d6d5d06812665d616bd242eefd7dbca457cb1041221a5f7",
+      "original_sha256": "da59d89415272039f7eca1c4e9c9d871883f95f923b8bd88f3530dbf2ad97b7d",
+      "changed_paths": [
+        "/linux",
+        "/etc/issue",
+        "/root/RELEASE.TXT",
+        "/root/HOWTO.TXT",
+        "/bootopts"
+      ],
+      "all_other_paths_and_metadata_unchanged": true,
+      "free_bytes": 59825152
+    }
+  },
+  "boot_folder": "ELKS4",
   "boot_files": {
-    "ELKS39FB/KERNLOC": {
+    "ELKS4/KERNLOC": {
       "bytes": 82384,
-      "sha256": "800272df3f11dda6e4e98864c691f15025fff934c8ced128856f980704ab81b1"
+      "sha256": "55a2259accfaad7ff5a51fff9ec85127d1d10f94ae6ac0cfd3e22f0b93fceb56"
     },
-    "ELKS39FB/KERNCF": {
+    "ELKS4/KERNCF": {
       "bytes": 78744,
-      "sha256": "e48701173b95857289547ecc958ae62580bc4a7f150395ee23d1827abdeeffa5"
+      "sha256": "30931fca581b1a828ef7dc019feaee42e7c60cdd2f562fc934a2c678666b0777"
     },
-    "ELKS39FB/COPYLOC.COM": {
+    "ELKS4/COPYLOC.COM": {
       "bytes": 1251,
-      "sha256": "dc54ee430bea8de4f9ab828eaeba8a2bcd469e37467c6f385ee52f26c56a2526"
+      "sha256": "c808f9fb1bc4e6329a7621aae404c935e920a8e8c5ad005d5c3206784cd2be93"
     },
-    "ELKS39FB/COPYCF.COM": {
+    "ELKS4/COPYCF.COM": {
       "bytes": 1250,
-      "sha256": "a8d40c95d90ac510420d3774c54dae213a8f068f386846e020514eb638d342b6"
+      "sha256": "573afb1c87b5160d52dd4c10899c6e023c45fe8630daf37bc29b003efedbfb6c"
     },
-    "ELKS39FB/HPLDLOC.COM": {
+    "ELKS4/HPLDLOC.COM": {
       "bytes": 15424,
-      "sha256": "219fa327ba6fd987c63be3bb9a8bfa22d644101ab708a381dced4b360f7a9a6f"
+      "sha256": "0f32ad907f7d2d0ae77362ead96aac8b5bbf39475347d07d037d95a0ac5be4ae"
     },
-    "ELKS39FB/HPLDCF.COM": {
+    "ELKS4/HPLDCF.COM": {
       "bytes": 1101,
-      "sha256": "38247cffa4c695b80b626a4634e777c0b53de3794e4ae248a64c00b769c7049b"
+      "sha256": "50a7eff7abb7b9fef88a53d8f9a517ec146bee5122344f2f86c242cb4adab6cc"
     },
-    "ELKS39FB/NET39.COM": {
+    "ELKS4/NET4.COM": {
       "bytes": 1329,
-      "sha256": "013545e5f3e931135db00840f777c95d58e80665260477e433ce28bc32353e30"
+      "sha256": "4d639e02bb17c387b9dc7e497101629c93075cc4d6624fc8783287ee8e435dac"
     },
-    "ELKS39FB/CFEN39.COM": {
+    "ELKS4/CFEN4.COM": {
       "bytes": 831,
       "sha256": "7e45f02660c0b1cace15850c5e10e46ae5f832fa7620befa29a5a219bd5ee4b3"
     },
-    "ELKS39FB/RUNELKS.BAT": {
-      "bytes": 2671,
-      "sha256": "0a16025336a53f19b97216f4d51c90f89a79aa892608088dd43a5db37ded887b"
+    "ELKS4/RUNELKS.BAT": {
+      "bytes": 2653,
+      "sha256": "ecd83465107027ae229b3d6681b9d696103a864dd0412e6f2b04b46ca7de9819"
     },
-    "ELKS39FB/RUNLOCAL.BAT": {
-      "bytes": 142,
-      "sha256": "ad2578b30c728993aef401a4d665c39e1539fab2a844571fd9858b9febda2234"
+    "ELKS4/RUNLOCAL.BAT": {
+      "bytes": 139,
+      "sha256": "840e8088a9eccd58222ab7f7efe7dfb922367cfa19a91ec334dbc047c870943a"
     },
-    "ELKS39FB/RUNCF.BAT": {
-      "bytes": 46,
-      "sha256": "11fed73669d71124184786c2adaa6d37f89a5cd4f94481868edf1307f585cf7c"
+    "ELKS4/RUNCF.BAT": {
+      "bytes": 43,
+      "sha256": "3de9578c77a19ecc516db7880ac556b63555c94dd227c77c7b10fbbe36830633"
     }
   },
   "software_checks": {
@@ -58,26 +153,37 @@
     "passed": 39,
     "skipped": 0,
     "logs": {
-      "software-tests.log": "9b2fd0ea31c85602f6080efb06836da669a9c0319ab79eb9acd0c08da0999659",
-      "preserved-tests.log": "5f350c8e3512e835921a0761bf7773d967d0a1dd4b4b2e45ad482aaceafc01c6",
-      "regression-before.log": "a1391bd7355910c2c5540f0c346d726bfa9937304e5459d80d8d1b404dc5d669",
-      "regression-after.log": "c79565b6b51c79ab29a0d52411a095caddebf8858a5aae9a7d589a648ee84c1f"
+      "software-tests.log": "e64cf2c79a5c9910465372910847bf200ee94a33b38a6301fdbece221284d1bf"
     }
   },
   "local_images": [
     {
       "name": "ELKS2M.MNX",
       "bytes": 737280,
-      "sha256": "f670a081a3936a6636398f56813c93e57198e4860cf4291ab030834f390368fd",
-      "unchanged": true,
-      "loader_handoff_passed": true
+      "sha256": "aa14352137de89e6f0355833c9e15f760a934b797e9efd3b0b8a153497f2920d",
+      "unchanged": false,
+      "loader_handoff_passed": true,
+      "original_sha256": "f670a081a3936a6636398f56813c93e57198e4860cf4291ab030834f390368fd",
+      "changed_paths": [
+        "/etc/issue",
+        "/root/ELX.txt"
+      ],
+      "all_other_paths_and_metadata_unchanged": true,
+      "free_bytes": 96256
     },
     {
       "name": "ELKS4M.MNX",
       "bytes": 3145728,
-      "sha256": "290b427ab362ecdd9b0bd78cc9109acc5c6b0fafdbed0b8368798d5659ee1da1",
-      "unchanged": true,
-      "loader_handoff_passed": true
+      "sha256": "d556ce3190d920ebeaf610e8ac3dbe00ca3225c85134b8fa3502582f49fc7453",
+      "unchanged": false,
+      "loader_handoff_passed": true,
+      "original_sha256": "290b427ab362ecdd9b0bd78cc9109acc5c6b0fafdbed0b8368798d5659ee1da1",
+      "changed_paths": [
+        "/etc/issue",
+        "/root/ELX.txt"
+      ],
+      "all_other_paths_and_metadata_unchanged": true,
+      "free_bytes": 229376
     }
   ],
   "cf_images": {
@@ -88,9 +194,9 @@
       "filesystem_kib": 7136,
       "free_bytes": 4250624,
       "free_inodes": 1561,
-      "sha256": "1eaa3279feb64838a3c0a7fb183779910954a86e2164be02c447890bb392df2d",
+      "sha256": "4b5aaa64a5aec6fc65c3679a43881f91ddab44a4aa061fd510b0b0b7c33100aa",
       "source_sha256": "54e5fe67318eb0b2d3926f341b10556bc594c120e40dbada816349730fa98fef",
-      "image": "R4C108.IMG"
+      "image": "ELKS4C08.IMG"
     },
     "16": {
       "nominal_card_mb": 16,
@@ -99,9 +205,9 @@
       "filesystem_kib": 14304,
       "free_bytes": 11590656,
       "free_inodes": 1561,
-      "sha256": "c5280e7e2ece5911181ced5d4f2f38f14f82cf5e743a308932a21fb72b4790cf",
+      "sha256": "a11e8ba441e4dcb6353144b031123bd5adc53e93746d447dac3efaffee8eded0",
       "source_sha256": "1eaa3279feb64838a3c0a7fb183779910954a86e2164be02c447890bb392df2d",
-      "image": "R4C116.IMG"
+      "image": "ELKS4C16.IMG"
     },
     "32": {
       "nominal_card_mb": 32,
@@ -110,9 +216,9 @@
       "filesystem_kib": 30688,
       "free_bytes": 28367872,
       "free_inodes": 1561,
-      "sha256": "5d67f8eb076ebce909087d19dd188ddc69bfefb4e8b9ba26fc5fa2c7c6a36763",
+      "sha256": "e36b0773cc10e0166e3c37f9cf04f821dff8b5f8c322193e1ae039f07316e117",
       "source_sha256": "1eaa3279feb64838a3c0a7fb183779910954a86e2164be02c447890bb392df2d",
-      "image": "R4C132.IMG"
+      "image": "ELKS4C32.IMG"
     },
     "64": {
       "nominal_card_mb": 64,
@@ -121,9 +227,9 @@
       "filesystem_kib": 61408,
       "free_bytes": 59825152,
       "free_inodes": 1561,
-      "sha256": "da59d89415272039f7eca1c4e9c9d871883f95f923b8bd88f3530dbf2ad97b7d",
+      "sha256": "66691bcf273dc8e65d6d5d06812665d616bd242eefd7dbca457cb1041221a5f7",
       "source_sha256": "1eaa3279feb64838a3c0a7fb183779910954a86e2164be02c447890bb392df2d",
-      "image": "R4C164.IMG"
+      "image": "ELKS4C64.IMG"
     }
   },
   "utilities": {
@@ -154,55 +260,40 @@
   },
   "assets": {
     "hp200lx-4.0-boot.zip": {
-      "bytes": 115867,
-      "sha256": "fae5b5b33cc63c109ab55fc22bb600b9cd54a6663ef166278b669a1247ae5506"
+      "bytes": 116013,
+      "sha256": "9407f6433f3489ca5d8b7aa93b06afaee4dd900d543c730d09a1ec2ad9a03e2e"
     },
     "hp200lx-4.0-cf-16mb.zip": {
-      "bytes": 1579684,
-      "sha256": "78e39b1da3e15fc22bba7cc6b283c482b1b38729c17d0cadb0609bbab1fa4851"
+      "bytes": 1579509,
+      "sha256": "591d1895205beabee4eafd800b46f83824caa04c24dc08e726c4d97d3056bf40"
     },
     "hp200lx-4.0-cf-32mb.zip": {
-      "bytes": 1595991,
-      "sha256": "6de8f0c45fc97548cfa61d82eff8c0f09aa14bff2c8db5e44a61b72c299b4779"
+      "bytes": 1595817,
+      "sha256": "3463ff699581de54ba23f09de3ff7b9c06f8aba6e14a5e6dd1d9587ae452c091"
     },
     "hp200lx-4.0-cf-64mb.zip": {
-      "bytes": 1626565,
-      "sha256": "78e302b722ffd05bdce11740c3c3a4890a93818e2a51a79f9a878be845081520"
+      "bytes": 1626385,
+      "sha256": "d90498f2453f9aeb2e64198284e09da8f2fed51171fd047b5e468f513664f78e"
     },
     "hp200lx-4.0-cf-8mb.zip": {
-      "bytes": 1572548,
-      "sha256": "a15b9fe4852aec8515e7658c2ff5db8f0ce83378021ab518684966a294dad6f5"
+      "bytes": 1572371,
+      "sha256": "9544e0276651cbafb1ce6facbb3701c255dd870345ae0fdefc39350cf2281345"
     },
     "hp200lx-4.0-elx-tools.zip": {
-      "bytes": 124232,
-      "sha256": "0739d9369b4e037fa6f76ac05710dbefdec017e764a14523fdf9b7e2a179f971"
+      "bytes": 124224,
+      "sha256": "09a41eb14e70ba9540ff923e1d2c888db838c57180b903731378fbef5a470612"
     },
     "hp200lx-4.0-image-tools.zip": {
-      "bytes": 2602987,
-      "sha256": "e38e5677c55268428177b97ad5186417d5198b73422d9920490437c03408a489"
+      "bytes": 2605939,
+      "sha256": "49f747d4f2395fe16d2ffa9b1ac03a6bd2363ec4062c1e0d63607fa3ccf0e5c2"
     },
     "hp200lx-4.0-local-images.zip": {
-      "bytes": 1842152,
-      "sha256": "19e3c1464d385843e434e4bba8f2e5b7bd4981f62f6b3c493da01efe40c3c2e3"
+      "bytes": 1841794,
+      "sha256": "5db8a544b396a25398fc53e487e6fff623426d909807d485447fafbf85119801"
     },
     "hp200lx-4.0-source.tar.gz": {
-      "bytes": 78057967,
-      "sha256": "feaa1454c957714cddec6dea4d64eb5ae534c4065c26626ad50c6267c310c4ca"
-    }
-  },
-  "packaging_validation": {
-    "asset_sha256": "PASS",
-    "all_zip_internal_checksums": "PASS",
-    "source_archive_identity": "PASS",
-    "source_boot_matches_distribution": "PASS",
-    "documentation_local_links": "PASS",
-    "frozen_promotion": "All 11 boot files and six filesystem images matched original manifests during packaging.",
-    "extracted_source_suite": {
-      "discovered": 39,
-      "passed": 39,
-      "skipped": 0,
-      "seconds": 36.988,
-      "result": "PASS"
+      "bytes": 78055874,
+      "sha256": "c817e8b06eaecd0689ca4028123645c4e64ff1a82dfc3d2e7c34c960b4871bc6"
     }
   }
 }

@@ -1,0 +1,58 @@
+/var/folders/_y/y_nlxrl949b4lbpwygsysmxw0000gn/T/tmpy5p57ynx/test.c:28:50: warning: cast to 'byte_t *' (aka 'unsigned char *') from smaller integer type 'segext_t' (aka 'unsigned short') [-Wint-to-pointer-cast]
+   28 |     fmemcpyb((byte_t *)data, current->t_regs.ds, (byte_t *)soff, sseg, (word_t) len);
+      |                                                  ^~~~~~~~~~~~~~
+/var/folders/_y/y_nlxrl949b4lbpwygsysmxw0000gn/T/tmpy5p57ynx/test.c:39:14: warning: cast to 'byte_t *' (aka 'unsigned char *') from smaller integer type 'segext_t' (aka 'unsigned short') [-Wint-to-pointer-cast]
+   39 |     fmemcpyb((byte_t *)doff, dseg, (byte_t *)data, current->t_regs.ds, (word_t) len);
+      |              ^~~~~~~~~~~~~~
+2 warnings generated.
+PASS: Accton integration: idle daemon exception, repeated wake, active/extra tasks refused, window/card guards, recovery failure keeps writes blocked
+PASS: local sleep: repeat recovery, ROM/card/idle/sync/serial gates, writable and readonly root, gate closed during recovery; timer/bank/guard/IRQ/data failures halt; default remains disabled
+PASS: same-card CIS and MAC match required before wake configuration writes; bank/wait/write-protection restored on refusal
+PASS: NIC ownership/idle gates; pending TX/RX refusal; IRQ remains masked through recovery; prepare/reset/IRQ failures remain paused
+storage: 12 sizes, all-sector read/write, sentinels, 16-bit boundary, invalid maps, bank/IRQ restore passed
+test_copy_verify_both_profiles_and_speeds (test_copy.Tests) ... ok
+test_file_failures (test_copy.Tests) ... ok
+test_invalid_options (test_copy.Tests) ... ok
+test_wrong_profile_preserves_working_file (test_copy.Tests) ... ok
+test_bad_arguments_stop_before_map (test_loader.Tests) ... ok
+test_cf_default (test_loader.Tests) ... ok
+test_custom_name (test_loader.Tests) ... ok
+test_header_and_map_refusal (test_loader.Tests) ... ok
+test_local_network_and_case (test_loader.Tests) ... ok
+test_nic_sleep_options (test_loader.Tests) ... ok
+test_small_image_handoff (test_loader.Tests) ... ok
+test_success_and_overlap (test_loader.Tests) ... ok
+test_upstream_image_handoff (test_loader.Tests) ... ok
+test_bad_filesystem (test_maplocal.Tests) ... ok
+test_bad_length_and_chain (test_maplocal.Tests) ... ok
+test_contiguous_and_fragmented (test_maplocal.Tests) ... ok
+test_reject_mismatch_cycle_fragment_limit_flex (test_maplocal.Tests) ... ok
+test_upstream_image (test_maplocal.Tests) ... ok
+test_variable_sizes_and_partial_clusters (test_maplocal.Tests) ... ok
+test_cf_selection (test_menu.Tests) ... ok
+test_conflicts (test_menu.Tests) ... ok
+test_failure_stops_before_handoff (test_menu.Tests) ... ok
+test_local_selection (test_menu.Tests) ... ok
+test_nic_sleep_selection (test_menu.Tests) ... ok
+test_sleep_lab_selection (test_menu.Tests) ... ok
+test_accton_completion_and_timeout (test_ne2k.Tests) ... ok
+test_ax88190_no_rdc_wait_and_correct_ack_port (test_ne2k.Tests) ... ok
+test_ax_receive_configuration_and_byte_io (test_ne2k.Tests) ... ok
+test_hp_irq_routing_preserves_other_pins_index_and_flags (test_ne2k.Tests) ... ok
+test_reset_and_overflow_timeout (test_ne2k.Tests) ... ok
+test_cf_rejects_local_arguments (test_profiles.Tests) ... ok
+test_linked_profile_isolation_and_uname (test_profiles.Tests) ... ok
+test_local_requires_explicit_image (test_profiles.Tests) ... ok
+test_local_sleep_lab (test_profiles.Tests) ... ok
+test_wrong_size_kernel_rejected (test_profiles.Tests) ... ok
+test_actual_loader_option_resolves_ssd (test_rootdev.Tests) ... ok
+test_linked_kernel_has_ssd_device (test_rootdev.Tests) ... ok
+test_sleep_mode_skips_linked_nic_initialization (test_sleep_nic.Tests) ... ok
+test_linked_uname_fields (test_version.Tests) ... ok
+
+----------------------------------------------------------------------
+Ran 39 tests in 36.810s
+
+OK
+mode isolation: local root never probes CF; unvalidated storage stays read-only; CF init retained
+kmem: packed and legacy read/write addresses and file-position updates passed

@@ -1,0 +1,14 @@
+{
+  "local": {
+    "old_bytes": 82384,
+    "new_bytes": 82384,
+    "only_version_text_changed": true,
+    "symbol_map_identical": true
+  },
+  "cf": {
+    "old_bytes": 78744,
+    "new_bytes": 78744,
+    "only_version_text_changed": true,
+    "symbol_map_identical": true
+  }
+}

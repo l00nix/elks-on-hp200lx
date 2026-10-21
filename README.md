@@ -16,9 +16,8 @@ the PCMCIA slot available for an Accton Ethernet card.
 · [Pre-4.0 README archive](docs/hp200lx/history/README-before-4.0.md)
 
 **4.0 is the HP integration package version, not an upstream ELKS version.**
-It promotes the accepted **3.9 FINAL2b** binaries unchanged. The DOS boot folder
-remains **C:\ELKS39FB**, and the boot banner / `uname -a` retain
-`hp200lx-3.9-final2b-local` or `hp200lx-3.9-final2b-cf`, dated 2026-10-20.
+Install the complete boot folder at **C:\ELKS4**. The boot banner and `uname -a`
+identify `hp200lx-4.0-local` or `hp200lx-4.0-cf`, dated 2026-10-21.
 Keep all boot-kit files together; do not mix helpers and kernels from other builds.
 
 ![ELKSWeb displaying FrogFind on a single-speed HP 200LX](docs/hp200lx/media/release4-frogfind-single.jpg)
@@ -84,11 +83,11 @@ Graphics, serial sessions and general application suspend are outside scope.
 ## Choose your filesystem
 
 Download the **boot ZIP** plus either a CF ZIP or the local-images ZIP.
-The boot kit contains 11 files totalling **185,173 bytes** and generates a kernel
+The boot kit contains 11 files totalling **185,149 bytes** and generates a kernel
 copy of up to **82,384 bytes**. Allow **320 KiB free on C:** for the boot kit,
 working copy and allocation slack, in addition to any MNX image.
 
-| Option | Filesystem | PCMCIA slot | DOS command from C:\ELKS39FB |
+| Option | Filesystem | PCMCIA slot | DOS command from C:\ELKS4 |
 | --- | --- | --- | --- |
 | CF root | Whole-card Minix partition | Occupied by CF | `RUNELKS /CF` |
 | Local root | Raw Minix file in C:\ | Empty or supported NIC | `RUNELKS /LOCAL C:\ELKS2M.MNX /NONET` |
@@ -104,20 +103,20 @@ leave headroom below nominal card capacities:
 
 | Nominal card | Image inside ZIP | Exact bytes | Filesystem KiB |
 | --- | --- | ---: | ---: |
-| 8 MB | `R4C108.IMG` | 7,340,032 | 7,136 |
-| 16 MB | `R4C116.IMG` | 14,680,064 | 14,304 |
-| 32 MB | `R4C132.IMG` | 31,457,280 | 30,688 |
-| 64 MB | `R4C164.IMG` | 62,914,560 | 61,408 |
+| 8 MB | `ELKS4C08.IMG` | 7,340,032 | 7,136 |
+| 16 MB | `ELKS4C16.IMG` | 14,680,064 | 14,304 |
+| 32 MB | `ELKS4C32.IMG` | 31,457,280 | 30,688 |
+| 64 MB | `ELKS4C64.IMG` | 62,914,560 | 61,408 |
 
 1. Verify the release SHA-256 checksums. Use media at least as large as the exact image.
 2. Write the IMG to the **whole CF card**, replacing its contents and partition table.
    Back up any files you need first, and verify the written image afterward.
-3. Copy the boot ZIP's `ELKS39FB` folder to `C:\ELKS39FB` on the HP.
+3. Copy the boot ZIP's `ELKS4` folder to `C:\ELKS4` on the HP.
 4. Insert the prepared CF, exit System Manager, then run:
 
    ```dos
    C:
-   CD \ELKS39FB
+   CD \ELKS4
    RUNELKS /CF
    ```
 
@@ -125,9 +124,8 @@ leave headroom below nominal card capacities:
 5. Confirm `/dev/cfa1` is the mounted root. Keep the root card inserted while ELKS runs.
 
 The CF images include corrected HP Nano-X, the tested ELX utility updates,
-ELKSWeb, `nx`, `/root/ser`, and ANSI defaults. The kernel is loaded from C:;
-the older `/linux` copy and development banners inside these byte-preserved
-images are not used to select the running kernel.
+ELKSWeb, `nx`, `/root/ser`, and ANSI defaults. The kernel is loaded from C:; the CF image also contains a matching `/linux`
+copy. Images display the 4.0 release banner.
 
 The images use Minix V1, 1 KiB blocks and 14-character names. Larger cards keep
 unused capacity beyond the image. The included **host-side** `grow_cf.py` can
@@ -149,12 +147,12 @@ alone do not establish installed RAM; storage allocation and existing files
 also affect what fits. Free space inside MNX is already part of its file size.
 
 1. Back up an existing MNX before replacing it. Copy the chosen file directly
-   to `C:\` and the complete boot directory to `C:\ELKS39FB`.
+   to `C:\` and the complete boot directory to `C:\ELKS4`.
 2. Start with an empty slot and networking disabled:
 
    ```dos
    C:
-   CD \ELKS39FB
+   CD \ELKS4
    RUNELKS /LOCAL C:\ELKS2M.MNX /NONET
    ```
 
@@ -175,7 +173,7 @@ Both images derive from upstream ELKS v0.9.2, retain its DHCP-capable network
 userland, and add ELKSWeb and the ELX tools. The compact edition omits Nano-X,
 games and manuals. The full edition retains stock programs; **the corrected HP
 Nano-X suite is supplied in the CF images**, not promised for the stock-derived
-local image. Both local images are preserved unchanged from the tests and contain
+local image. Both local images retain the tested application payloads and contain
 ELXbat 0.1.3 and ELXdash 0.2.0-test3. Install the separate utility update pack for
 ELXbat 0.1.4's partial redraw and ELXdash test4's clearer charging lock/labels.
 See [ELX tools](docs/hp200lx/ELX-TOOLS-4.0.md).
@@ -269,7 +267,9 @@ The maintainer accepted the hardware tests and sleep guards on 21 October 2026.
 The test record distinguishes user observations from serial-verified checks:
 [acceptance summary](docs/hp200lx/ACCEPTANCE-4.0.md).
 The binaries passed 39 discovered software checks with no skips, and release
-packaging verifies every boot file and filesystem against the frozen hashes.
+packaging verifies every file against its manifest. The naming refresh changes
+version displays, boot names and image documentation; application payloads and
+filesystem geometry are unchanged.
 
 CF growth beyond 32 MiB has host-side allocation/readback/fsck coverage; this is
 not a claim that every CF capacity/card combination or every high-zone workload
@@ -279,8 +279,7 @@ No repair or clean-flag rewrite was performed.
 
 Source and licenses are supplied with the release. The matching build source is
 in **hp200lx-4.0-source.tar.gz**; follow its release build guide rather than the
-historical repository-root build instructions. Older embedded documentation and
-banners in preserved images identify their original construction builds.
+historical repository-root build instructions. Historical source and test records retain their original build identities.
 
 ## Credits and related projects
 
