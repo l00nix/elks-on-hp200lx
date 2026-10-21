@@ -152,7 +152,11 @@ static void FARPROC far_start_kernel(void)
     idle_loop();                    /* no return */
 }
 
+/* This hook is provided only by kbd-poll.o (see drivers/char/Makefile). */
+#if (defined(CONFIG_ARCH_IBMPC) && !defined(CONFIG_KEYBOARD_SCANCODE)) || \
+    defined(CONFIG_ARCH_SWAN) || defined(CONFIG_ARCH_SOLO86)
 extern void hp200lx_newton_idle_poll_n24(void);
+#endif
 
 /* the idle task loop, no return */
 static void idle_loop(void)
@@ -188,7 +192,10 @@ static void idle_loop(void)
         }
 #endif
         schedule();
+#if (defined(CONFIG_ARCH_IBMPC) && !defined(CONFIG_KEYBOARD_SCANCODE)) || \
+    defined(CONFIG_ARCH_SWAN) || defined(CONFIG_ARCH_SOLO86)
         hp200lx_newton_idle_poll_n24();
+#endif
 #ifdef CONFIG_TIMER_INT0F
         int0F();        /* simulate timer interrupt hooked on IRQ 7 */
 #else
