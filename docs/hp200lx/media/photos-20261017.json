@@ -1,0 +1,327 @@
+{
+  "source": "screenshots_17OCT26.zip supplied by user",
+  "processing": "Conventional perspective correction and crop; no generative editing, color/contrast adjustment, or retouching. LCD aperture mapped to 1600x620 with 12px margin on each side.",
+  "release_scope": "Development captures; not final 4.0 acceptance evidence. Exact hardware speed, CF and build not recorded for every capture.",
+  "photos": [
+    {
+      "filename": "ELKS_startup_with_etc_issue.jpg",
+      "original_sha256": "908840c2ae0ae3b077120911df1515f166eac470ab51b55e3b4e748d160b6bd6",
+      "original_size": [
+        4080,
+        3064
+      ],
+      "aperture_corners_preview_1824": [
+        [
+          74,
+          230
+        ],
+        [
+          1638,
+          216
+        ],
+        [
+          1642,
+          807
+        ],
+        [
+          91,
+          839
+        ]
+      ],
+      "output_size": [
+        1624,
+        644
+      ],
+      "output_sha256": "f3d4d1bc7ad19d59b057c5fc689d2a20c3bcf657929e7e263f26d4967bca5524",
+      "edits": "Perspective correction, crop with narrow bezel, bicubic resize, JPEG export; no tonal or content edits."
+    },
+    {
+      "filename": "ELKSWeb_frogfind.jpg",
+      "original_sha256": "f18aff2f09dcf8428a478fe8ab7a9de013f5739a3fa01daead6000ba3cd26950",
+      "original_size": [
+        4080,
+        3064
+      ],
+      "aperture_corners_preview_1824": [
+        [
+          175,
+          217
+        ],
+        [
+          1685,
+          190
+        ],
+        [
+          1701,
+          765
+        ],
+        [
+          190,
+          807
+        ]
+      ],
+      "output_size": [
+        1624,
+        644
+      ],
+      "output_sha256": "ef99e278afb45c09a299fc874253cae7a381f2e0141a8da8c95e7b95f22df371",
+      "edits": "Perspective correction, crop with narrow bezel, bicubic resize, JPEG export; no tonal or content edits."
+    },
+    {
+      "filename": "ELKSWeb_frogfind_inverted.jpg",
+      "original_sha256": "6c06faa80654b6b8bb11741e5641e6f8909f0b1b6b9f794303de1f65e654a3fd",
+      "original_size": [
+        4080,
+        3064
+      ],
+      "aperture_corners_preview_1824": [
+        [
+          177,
+          213
+        ],
+        [
+          1687,
+          189
+        ],
+        [
+          1703,
+          765
+        ],
+        [
+          191,
+          803
+        ]
+      ],
+      "output_size": [
+        1624,
+        644
+      ],
+      "output_sha256": "cb9ee19e9cd6d9fcb7756602878d13ae1ee660304cb4e63d409012e7de7e16f3",
+      "edits": "Perspective correction, crop with narrow bezel, bicubic resize, JPEG export; no tonal or content edits."
+    },
+    {
+      "filename": "ELXstat.jpg",
+      "original_sha256": "e9ecc0250b132f952e50cc0caace09057ff0e3c2971bc0d291ace2804231a3fa",
+      "original_size": [
+        4080,
+        3064
+      ],
+      "aperture_corners_preview_1824": [
+        [
+          181,
+          216
+        ],
+        [
+          1694,
+          198
+        ],
+        [
+          1705,
+          775
+        ],
+        [
+          195,
+          805
+        ]
+      ],
+      "output_size": [
+        1624,
+        644
+      ],
+      "output_sha256": "c551e6e8059217cc4d013ad542c485d887d7d564d7dc9d250f1cf8dc11db0c58",
+      "edits": "Perspective correction, crop with narrow bezel, bicubic resize, JPEG export; no tonal or content edits."
+    },
+    {
+      "filename": "ELXbat.jpg",
+      "original_sha256": "2e72cc788aff8fdca9fab2159781f8fa302583857a17c1aef3df375b7e5b14d2",
+      "original_size": [
+        4080,
+        3064
+      ],
+      "aperture_corners_preview_1824": [
+        [
+          191,
+          210
+        ],
+        [
+          1705,
+          200
+        ],
+        [
+          1713,
+          777
+        ],
+        [
+          199,
+          797
+        ]
+      ],
+      "output_size": [
+        1624,
+        644
+      ],
+      "output_sha256": "4779c9f653e6eb2d3942134c5a1ac19bf637a336eb699e7f4bf7331724018c75",
+      "edits": "Perspective correction, crop with narrow bezel, bicubic resize, JPEG export; no tonal or content edits."
+    },
+    {
+      "filename": "meminfo_regular_screen.jpg",
+      "original_sha256": "4dced2414fa8034ad14e55e09b1a7b5ab305fd3e1830606416eee0688132df74",
+      "original_size": [
+        4080,
+        3064
+      ],
+      "aperture_corners_preview_1824": [
+        [
+          74,
+          229
+        ],
+        [
+          1638,
+          213
+        ],
+        [
+          1641,
+          804
+        ],
+        [
+          90,
+          837
+        ]
+      ],
+      "output_size": [
+        1624,
+        644
+      ],
+      "output_sha256": "e3e31d173d171f1ecbc5aafcdcc75e1179731c5f94f49619bee9184ac62f534d",
+      "edits": "Perspective correction, crop with narrow bezel, bicubic resize, JPEG export; no tonal or content edits."
+    },
+    {
+      "filename": "meminfo_inverted_screen.jpg",
+      "original_sha256": "3c60081c03fcc8c1b1cabb5be3304a5292dd78ce8bb21205930fde70e2f4cc9a",
+      "original_size": [
+        4080,
+        3064
+      ],
+      "aperture_corners_preview_1824": [
+        [
+          77,
+          220
+        ],
+        [
+          1639,
+          209
+        ],
+        [
+          1644,
+          800
+        ],
+        [
+          92,
+          828
+        ]
+      ],
+      "output_size": [
+        1624,
+        644
+      ],
+      "output_sha256": "8f373f81dcbe4e9945f49a0d1ac45e85f347e45ed2433b5e8311604de47306d2",
+      "edits": "Perspective correction, crop with narrow bezel, bicubic resize, JPEG export; no tonal or content edits."
+    },
+    {
+      "filename": "meminfo_zoom_1.jpg",
+      "original_sha256": "84dfcee6b402b0a2257d642cf3ec9413df1d5a66376cd259894a221bece94483",
+      "original_size": [
+        4080,
+        3064
+      ],
+      "aperture_corners_preview_1824": [
+        [
+          74,
+          219
+        ],
+        [
+          1638,
+          206
+        ],
+        [
+          1642,
+          797
+        ],
+        [
+          90,
+          827
+        ]
+      ],
+      "output_size": [
+        1624,
+        644
+      ],
+      "output_sha256": "36fb9164cf798faadf43c8dfa625c8e3237bccff2e640a59201aa532bd0c06f5",
+      "edits": "Perspective correction, crop with narrow bezel, bicubic resize, JPEG export; no tonal or content edits."
+    },
+    {
+      "filename": "meminfo_zoom2.jpg",
+      "original_sha256": "2f7423282547572000abf9f0821e6458ea8bf8923ff9323e9464df2072099c40",
+      "original_size": [
+        4080,
+        3064
+      ],
+      "aperture_corners_preview_1824": [
+        [
+          75,
+          216
+        ],
+        [
+          1638,
+          205
+        ],
+        [
+          1641,
+          794
+        ],
+        [
+          91,
+          824
+        ]
+      ],
+      "output_size": [
+        1624,
+        644
+      ],
+      "output_sha256": "9f528cb967603664f1d7079d59c0ec1efc7c2b240aa1439040796b4fd95927e1",
+      "edits": "Perspective correction, crop with narrow bezel, bicubic resize, JPEG export; no tonal or content edits."
+    },
+    {
+      "filename": "nxclock.jpg",
+      "original_sha256": "ba585c127bd15df14ed6214024ed9b3f650d90dd499874506dd35cf73fcc6fc5",
+      "original_size": [
+        4080,
+        3064
+      ],
+      "aperture_corners_preview_1824": [
+        [
+          209,
+          168
+        ],
+        [
+          1648,
+          164
+        ],
+        [
+          1664,
+          710
+        ],
+        [
+          207,
+          730
+        ]
+      ],
+      "output_size": [
+        1624,
+        644
+      ],
+      "output_sha256": "fcbebacd60b6c7d0787f10d94d2c64be4ccfc1df8dfb43cec43ed3fae65faa92",
+      "edits": "Perspective correction, crop with narrow bezel, bicubic resize, JPEG export; no tonal or content edits."
+    }
+  ]
+}

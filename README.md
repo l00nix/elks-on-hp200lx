@@ -1,384 +1,297 @@
-# ELKS Linux on the HP 200LX
-
-A **downstream fork of [ELKS](https://github.com/ghaerr/elks)** for the **Hewlett-Packard 200LX palmtop**.
-
-This is community bring-up work, not an official ELKS release. It tracks the HP 200LX effort discussed in [ghaerr/elks#2236](https://github.com/ghaerr/elks/issues/2236). Upstream ELKS credit and the GPLv2 license remain with the ELKS authors.
-
----
-
-## Release 3.5 - HP Firmware Support
-
-**[Release 3.5 is the current HP 200LX ELKS release](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5).** It starts from a clean upstream ELKS baseline and uses HP ROM keyboard services with ELKS's standard IRQ1 scan-code/TTY path. Separate patches cover firmware support, PCMCIA/CF compatibility and the final kernel relocation segment used by the DOS boot path.
-
-**Next test:** [Release 3.5.2d](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5.2d) disables ASYNCIO for the synchronous ATA-CF driver, following Greg Haerr's advice. ELKS selects 640-byte task stacks and one request entry; the shared stack remains 1,024 bytes. The image is 296 bytes smaller, and task allocation saves 960 bytes at the default 16 slots. Build/emulator checks pass, and initial hardware testing is now confirmed: keyboard, zoom/panning, screen speed, busy-loop Ctrl-C, CF write/readback across reboot and cleanup work. `shutdown -r` also returns the HP 200LX to DOS. Photos show written peaks of 202/640 and 222/1,024 bytes, zero guard/unknown flags, TASK allocation 13,574 bytes (960 fewer), and 376K free. These are workload results, not worst-case bounds. [Hardware evidence](https://github.com/l00nix/elks-on-hp200lx/blob/codex/hp200lx-release-3.5.2d/docs/hp200lx/hardware-results/2026-09-29-3.5.2d-meminfo.md). Copy the full `ELKS352D` folder to `C:\ELKS352D` and run `RUN352D`. **Use `meminfo -s`**: older CF copies of bare `meminfo`, its process-listing modes, and `ps` assume the previous task structure size. The `-s` mode still prints system allocations, all four HPST lines, and overall memory on the final `Main` line. Keep 3.5.2c as the working fallback; no CF rewrite is needed for this test. [Instructions and compatibility notes](https://github.com/l00nix/elks-on-hp200lx/blob/hp200lx-release-3.5.2d/docs/hp200lx/RELEASE3.5.2D.md). [Developer-guide findings on firmware keyboard, zoom/panning and cursor tracking](https://github.com/l00nix/elks-on-hp200lx/blob/hp200lx-release-3.5.2d/docs/hp200lx/BIOS-KEYBOARD-DISPLAY.md). Only the boot ZIP is uploaded to captainfuture.
-
-**Previous test:** [Release 3.5.2c](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5.2c) measures every valid task-stack ROM call to improve coverage after 3.5.2b's single task sample. Shared sampling stays one in 32 and guard checks stay active on every valid call. `meminfo` shows `sample=all/32`; task sample and call counts should match. Build/emulator checks pass. Follow-up photo 25825 records over 1,000 measured task calls, task/shared peaks 202/700 and 224/1,024 bytes, shared samples 481 from 15,392 calls, both ROM-region peaks 168 bytes, zero guards/unknown and 376K free. The user confirms the busy loop ran, Ctrl-C worked, and zoom/panning/speed seem fine. These observed peaks are useful workload evidence, not a worst-case guarantee; stack sizes remain unchanged. [Recorded hardware results](https://github.com/l00nix/elks-on-hp200lx/blob/codex/hp200lx-release-3.5.2c/docs/hp200lx/hardware-results/2026-09-28-3.5.2c-meminfo.md). Use `C:\ELKS352C` and `RUN352C` with the existing CF card. [Instructions and limits](https://github.com/l00nix/elks-on-hp200lx/blob/hp200lx-release-3.5.2c/docs/hp200lx/RELEASE3.5.2C.md). Keep 3.5.2b for fallback; full task probing may slow CPU-bound workloads. Only the boot ZIP is uploaded to captainfuture.
-
-**Previous test:** [Release 3.5.2b](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5.2b) reduces stack-probe overhead after the previous diagnostic's slow-screen report. It measures the first valid ROM call on each stack, then one in 32, with guard checks on every valid call. `meminfo` now prints four HPST lines including total call counts. Build/emulator checks pass. Photo 25823 and the user report confirm faster screen output: task/shared sampled peaks are 82/700 and 222/1,024 bytes, with 1/128 samples from 16/4,082 calls, zero guard flags and `unknown=0`. Meminfo reports 376K free. This is initial evidence, not a timed benchmark or worst-case stack result. [Hardware findings](https://github.com/l00nix/elks-on-hp200lx/blob/codex/hp200lx-release-3.5.2b/docs/hp200lx/hardware-results/2026-09-28-3.5.2b-meminfo.md). Use `C:\ELKS352B` and `RUN352B` with the existing CF root card; no CF rewrite. Stack sizes and final relocation remain unchanged. [Test instructions and sampling limitations](https://github.com/l00nix/elks-on-hp200lx/blob/hp200lx-release-3.5.2b/docs/hp200lx/RELEASE3.5.2B.md).
-
-**Previous diagnostic beta:** [Release 3.5.2 beta 1](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5.2-beta1) adds HP ROM stack measurements in response to Greg Haerr's review. The existing `meminfo` prints separate task/shared-stack `HPST` reports with guard checks; `HPBOOT` prints initial, staging and final relocation segments. Stack sizes remain 700/1,024 bytes and final relocation remains `0340h`. Build and emulator checks pass. Initial hardware testing confirms keyboard, zoom/panning and `meminfo`; photo 25821 records task/shared written peaks of 80/700 and 282/1,024 bytes, both guards zero and `unknown=0`, with 374K free. Screen printing is reported much slower; per-call probe overhead is the leading unverified explanation. [Recorded hardware findings](https://github.com/l00nix/elks-on-hp200lx/blob/hp200lx-release-3.5.2-beta1/docs/hp200lx/hardware-results/2026-09-28-3.5.2-beta1-meminfo.md). Use `C:\ELKS352` and `RUN352B1` with the existing CF root card. [Diagnostic instructions and measurement limits](https://github.com/l00nix/elks-on-hp200lx/blob/hp200lx-release-3.5.2-beta1/docs/hp200lx/RELEASE3.5.2-BETA1.md). This gathers evidence rather than establishing worst-case stack safety. RAMdisk and networking remain disabled; DOS-style ON/OFF suspend remains a known limitation.
-
-**Previous beta:** [Release 3.5.1 beta 1](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5.1-beta1) disables the kernel RAMdisk driver entirely and reduces the image by 1,288 bytes. Build and regression checks pass; photo 25811 confirms HP boot, CF root mounting and a shell prompt. The user also confirms basic keyboard input, `ls /`, `cat /etc/issue`, `meminfo`, zoom and panning work; the memory figures are still pending. It uses a separate `C:\ELKS351` folder and `RUN351B1` launcher with the existing CF root card. [Beta findings and test instructions](https://github.com/l00nix/elks-on-hp200lx/blob/hp200lx-release-3.5.1-beta1/docs/hp200lx/RELEASE3.5.1-BETA1.md). Release 3.5 remains the stable fallback; networking is not enabled in this beta.
-
-Boot, a Minix root mount on `/dev/cfa1`, basic built-in keyboard input, zoom and panning have hardware evidence. The Release 3.5 kernel was rebuilt and verified to change only two version strings from the tested development candidate. Modifiers/repeat, Ctrl-C, timer accuracy, sustained writes and power-management behavior still need validation.
-
-- [Download Release 3.5](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-3.5) — choose `hp200lx-release3.5.zip` for the complete DOS boot folder.
-- [Release 3.5 source branch](https://github.com/l00nix/elks-on-hp200lx/tree/hp200lx-release-3.5)
-- [Installation, GentleOS/MINIX inspiration, BIOS approach and validation](https://github.com/l00nix/elks-on-hp200lx/blob/hp200lx-release-3.5/docs/hp200lx/RELEASE3.5.md)
-- [Draft upstream issue update](https://github.com/l00nix/elks-on-hp200lx/blob/hp200lx-release-3.5/docs/hp200lx/RELEASE3.5-UPSTREAM-ISSUE-DRAFT.md)
-
-Copy the complete `ELKS35` folder to `C:\ELKS35`. From fresh DOS outside System Manager, with `STACKS=0,0` and the existing Release 3/3.1 ELKS CF root card, run:
-
-```text
-C:
-CD \ELKS35
-RUNR35
-```
-
-Kernel: `KERNR35`. Boot identifier: `HPR3.5 ROM`. Diagnostic log: `HPR35.TXT`. The boot ZIP does not include the persistent CF root image; existing installations need no CF rewrite. The source and checksums are separate ZIP assets on the release page.
-
----
-
-## Release 3.1 - RAMdisk Memory Fix
-
-**Release 3.1 is the previous HP 200LX ELKS release; Release 3.5 supersedes it.** It keeps the Release 3 PCMCIA/CF persistent root filesystem path, but fixes the unused RAMdisk reservation that left ELKS with much less conventional memory for programs.
-
-Release 3.1 was validated on real HP 200LX hardware using the MEMLAB16 test build. The kernel now reports:
-
-```text
-rd: 0K ramdisk at 3200:0000
-VFS: Mounted root device /dev/cfa1 (0501) minix filesystem.
-```
-
-The Release 3.1 memory test showed approximately:
-
-```text
-Main 79/512K used, 431K free
-```
-
-![HP 200LX Release 3.1 boot showing 0K RAMdisk reservation](docs/hp200lx/images/release3.1-boot-0k-ramdisk.jpg)
-
-*Release 3.1/MEMLAB16 boot on real HP 200LX hardware: the kernel reports `rd: 0K ramdisk at 3200:0000` before mounting the PCMCIA/CF root filesystem.*
-
-![HP 200LX Release 3.1 meminfo showing the reclaimed RAMdisk memory](docs/hp200lx/images/release3.1-meminfo.jpg)
-
-*Release 3.1/MEMLAB16 on real HP 200LX hardware: `meminfo` after booting with a 0K RAMdisk reservation.*
-
-This is a boot-package update only. Use the Release 3 PCMCIA/CF root image package for the Minix root filesystem.
-
-What changed from Release 3:
-
-- `KERNBOP` was updated with the MEMLAB16/R3D46 kernel patch.
-- The kernel reserves `0K` for the legacy RAMdisk instead of the old `360K` reservation.
-- `ROOT092` remains in the DOS boot package for compatibility with the current `BTGVDX` loader path, but it no longer costs ELKS the old RAMdisk reservation after boot.
-- The root filesystem is still the persistent PCMCIA/CF Minix partition mounted from `/dev/cfa1`.
-- `vi` now has enough memory to start; set `TERM=ansi` first.
-
-### Release 3.1 Artifacts
-
-- Boot package: [`releases/hp200lx-release3.1.zip`](releases/hp200lx-release3.1.zip)
-- PCMCIA/CF root image package: [`releases/hp200lx-release3-rootcf.zip`](releases/hp200lx-release3-rootcf.zip)
-- Normal DOS entry point: `RUNELKS.BAT`
-- Fallback DOS entry point: `RUNCARD.BAT`
-- Kernel image inside the boot package: `KERNBOP`
-- Root image inside the root package: `R3ROOT.IMG`
-
-Checksums:
-
-```text
-4ce7788969635c625d4c21524e89cd9e4c07fb77266d67e36d9681cfce753461  hp200lx-release3.1.zip
-bf6ac72d5f090cc3062876f910f477da61216cd171c0664fcfb2942ac4aa54d0  KERNBOP
-f770d2be6d804cdfa6fa8e332533ee111b45401ec520e8ded2746530b854ca2a  hp200lx-release3-rootcf.zip
-2f346ad04526a37536178e463f78b478b774e051278572361f6e72bdec704aa1  R3ROOT.IMG
-```
-
-### Install Release 3.1
-
-Follow the Release 3 install process, but use [`hp200lx-release3.1.zip`](releases/hp200lx-release3.1.zip) for the DOS `C:\ELKS` boot files. The root image is unchanged from Release 3, so continue to use [`hp200lx-release3-rootcf.zip`](releases/hp200lx-release3-rootcf.zip) for the PCMCIA/CF card.
-
-After ELKS boots, set `TERM` before starting `vi`:
-
-```text
-TERM=ansi
-export TERM
-vi
-```
-
-### Release 3.1 Notes
-
-- `BTGVDX` may still print `ROOTEND=8C00`; that is expected because the loader path is unchanged.
-- The important kernel clue is `rd: 0K ramdisk at 3200:0000`.
-- A future cleanup can remove the custom loader RAMdisk copy path entirely, but Release 3.1 already reclaims the memory for ELKS after boot.
-
----
-
-## Release 3 - Persistent PCMCIA/CF Root Filesystem
-
-**Release 3 boots ELKS on a real HP 200LX with the built-in keyboard and a persistent Minix root filesystem on a PCMCIA/CF card.**
-
-Release 2 proved the HP 200LX could run ELKS as a self-contained palmtop using the internal keyboard. Release 3 adds the next major piece: ELKS can now mount the PCMCIA/CF card as its root filesystem, so files and configuration changes survive a reboot.
-
-![HP 200LX running ELKS Release 3 with hphello](docs/hp200lx/images/release3-hphello.jpg)
-
-*Release 3 on real HP 200LX hardware: ELKS running from the internal keyboard with a persistent PCMCIA/CF Minix root filesystem.*
-
-What works in Release 3:
-
-- Boots ELKS to `/bin/sh` on a stock-clock HP 200LX with 4 MB RAM.
-- Uses the built-in HP 200LX keyboard; no external keyboard is required.
-- Mounts the PCMCIA/CF Minix partition as `/`.
-- Persists files across a full reboot.
-- Includes the regular ELKS 2880K Minix userland.
-- Adds `/bin/hphello`, a small HP 200LX release screenshot helper.
-- Includes programs such as `tetris`, `digger`, `elkirc`, `memopad`, Nano-X tools, and `nxjpeg` (not tested yet).
-
-Expected boot line:
-
-```text
-VFS: Mounted root device /dev/cfa1 (0501) minix filesystem.
-```
-
-### Release 3 Artifacts
-
-- Boot package: [`releases/hp200lx-release3.zip`](releases/hp200lx-release3.zip)
-- PCMCIA/CF root image package: [`releases/hp200lx-release3-rootcf.zip`](releases/hp200lx-release3-rootcf.zip)
-- Optional hpreboot test root image package: [`releases/hp200lx-release3-hpreboot-rootcf.zip`](releases/hp200lx-release3-hpreboot-rootcf.zip)
-- Normal DOS entry point: `RUNELKS.BAT`
-- Fallback DOS entry point: `RUNCARD.BAT`
-- Kernel image inside the boot package: `KERNBOP`
-- Root image inside the root package: `R3ROOT.IMG`
-
-Checksums:
-
-```text
-77f243dd0bcdfadb8d36bfc9271ecc37d47c15904b1d13a9f30b15de3e59b562  hp200lx-release3.zip
-f770d2be6d804cdfa6fa8e332533ee111b45401ec520e8ded2746530b854ca2a  hp200lx-release3-rootcf.zip
-2f346ad04526a37536178e463f78b478b774e051278572361f6e72bdec704aa1  R3ROOT.IMG
-0c13fb4c85a19e94dbebc3d75a5bd1c28603837a9d32804facf9122ac5952a9a  hp200lx-release3-hpreboot-rootcf.zip
-9f09d7476fc26196106d423ef6efc5d0abd57050802cf1d001b2673c9d3fdccd  hpreboot R3ROOT.IMG
-```
-
-### Install Release 3
-
-Before starting, boot the HP 200LX to the DOS `C:` drive prompt, not into the built-in HP PIM application. In `AUTOEXEC.BAT`, comment out the `200` line so the PIM shell does not start automatically and more RAM remains available for ELKS:
-
-```dos
-REM 200
-```
-
-You need:
-
-- An HP 200LX with DOS booting from the internal `C:` drive.
-- A spare PCMCIA/CF card for the ELKS Minix root filesystem.
-- A way to copy files to the HP 200LX internal DOS drive.
-- A way to write a whole-card image to the spare CF card.
-
-Release 3 uses a two-stage boot:
-
-```text
-Internal DOS C: drive       -> starts the ELKS loader from C:\ELKS
-PCMCIA/CF Minix partition   -> becomes the ELKS root filesystem (/dev/cfa1)
-```
-
-This is intentionally conservative. A fully self-contained bootable PCMCIA/CF card was tested, but booting DOS and later using the same card as the ELKS root device proved less reliable on the HP 200LX. The stable Release 3 path keeps the boot bundle on internal DOS storage and uses the PCMCIA/CF card for ELKS persistent storage.
-
-1. Download and unzip [`hp200lx-release3.zip`](releases/hp200lx-release3.zip).
-2. Copy all files from `hp200lx-release3/` to `C:\ELKS` on the HP 200LX.
-3. Download and unzip [`hp200lx-release3-rootcf.zip`](releases/hp200lx-release3-rootcf.zip).
-4. Write `R3ROOT.IMG` to a spare CF card.
-
-On Linux or macOS, this is typically something like:
-
-   ```sh
-   dd if=R3ROOT.IMG of=/dev/rdiskN bs=1m conv=sync
-   ```
-
-Replace `/dev/rdiskN` with the real card device. This overwrites the target device.
-
-On Windows, [Raspberry Pi Imager](https://www.raspberrypi.com/software/) can write `R3ROOT.IMG` to the CF card using its custom image option. Be careful to select the CF card as the target, since this overwrites the card.
-
-5. Boot the HP 200LX into DOS from the internal `C:` drive, landing at the DOS prompt rather than the HP PIM application. As above, this means the `200` line in `AUTOEXEC.BAT` should be commented out as `REM 200` to save RAM for ELKS.
-6. Insert the prepared PCMCIA/CF card.
-7. From DOS:
+# ELKS on the HP 200LX
+
+**HP 200LX package 4.0 · based on ELKS 0.9.2**
+
+Run [ELKS](https://github.com/ghaerr/elks), a small Linux system for 16-bit x86
+computers, on the HP 200LX with its built-in keyboard, native display controls,
+persistent storage and graphical HTTP browsing. One DOS launcher selects between
+**two kernels**: CF root storage, or an internal filesystem file on C: that leaves
+the PCMCIA slot available for an Accton Ethernet card.
+
+[Download 4.0](https://github.com/l00nix/elks-on-hp200lx/releases/tag/hp200lx-release-4.0)
+· [Changes since 3.5](docs/hp200lx/RELEASE-4.0.md)
+· [Hardware acceptance](docs/hp200lx/ACCEPTANCE-4.0.md)
+· [Build/source guide](docs/hp200lx/BUILD-4.0.md)
+· [Historical releases](https://github.com/l00nix/elks-on-hp200lx/releases)
+· [Pre-4.0 README archive](docs/hp200lx/history/README-before-4.0.md)
+
+**4.0 is the HP integration package version, not an upstream ELKS version.**
+It promotes the accepted **3.9 FINAL2b** binaries unchanged. The DOS boot folder
+remains **C:\ELKS39FB**, and the boot banner / `uname -a` retain
+`hp200lx-3.9-final2b-local` or `hp200lx-3.9-final2b-cf`, dated 2026-10-20.
+Keep all boot-kit files together; do not mix helpers and kernels from other builds.
+
+![ELKSWeb displaying FrogFind on a single-speed HP 200LX](docs/hp200lx/media/release4-frogfind-single.jpg)
+
+*Actual palmtop during Release 4 acceptance: the single-speed unit loaded
+FrogFind over the Internet through the Accton card, including the frog GIF.*
+
+## What works
+
+- Factory-speed and double-speed HP 200LX operation; `/DS` selects the display correction.
+- BIOS keyboard, zoom, panning, cursor focus and screen inversion.
+- A 636 KiB conventional-memory boundary, reserving the top 4 KiB for firmware.
+  This is a boundary, not free application RAM; kernel and programs use part of it.
+- Writable Minix root on CF (`/dev/cfa1`) or in a DOS C: image (`/dev/ssd`),
+  with mapping/storage validation and guarded recovery.
+- Guarded CF sleep, including the tested `edit` text-editor case.
+- Opt-in writable local sleep at the idle shell, with an empty slot or the
+  tested Accton EN2216 R02. See the exact scope below.
+- DHCP, DNS and live HTTP browsing using the local kernel, Accton and `ktcp`.
+  FrogFind and 68k.news rendered on real hardware; large pages are slow.
+- ELKSWeb plus ELXbat, ELXstat, ELX Commander, ELXdash, ELXctl and ELXcap.
+- Corrected HP Nano-X applications and `nx` launcher in the CF images.
+- Serial shell helper and stock ELKS v0.9.2 raw Minix image compatibility.
+
+## HP BIOS functions and keyboard shortcuts
+
+The HP integration retains native firmware services for the palmtop's keyboard
+and display. The keys below use drawings inspired by the HP keyboard legends.
+A **+** between keys means hold them together.
+
+| Keys | Function | What to expect |
+| --- | --- | --- |
+| <img src="docs/hp200lx/keys/shortcut-invert.svg" alt="ON + /" width="119"> | Invert the screen | Swap the light and dark display polarity. Repeat **ON + /** to restore it. |
+| <img src="docs/hp200lx/keys/shortcut-zoom.svg" alt="Fn + Space" width="187"> | Change zoom | **Fn + Space** cycles through the firmware's text zoom levels. |
+| <img src="docs/hp200lx/keys/shortcut-pan.svg" alt="Menu + an arrow key" width="290"> | Pan the view | Hold **Menu** and press an arrow to move the visible window over the larger text screen. |
+| <img src="docs/hp200lx/keys/key-on.svg" alt="ON, OFF legend" width="50"> | Sleep / wake | Request sleep with **ON/OFF**; wake with **ON**. ELKS checks whether the current activity can be suspended safely. |
+| <img src="docs/hp200lx/keys/shortcut-reboot.svg" alt="Ctrl + Alt + Del" width="212"> | Reboot to DOS | **Ctrl + Alt + Del** restarts the palmtop. Save and sync first. |
+| <img src="docs/hp200lx/keys/shortcut-reset.svg" alt="Ctrl + Shift + ON" width="204"> | Hard reset | **Ctrl + Shift + ON** recovers a hung system. At an initialization prompt, press **N** to preserve C:. |
+
+
+### Sleep modes
+
+| Boot mode | Sleep support in 4.0 |
+| --- | --- |
+| `/CF` | Guarded local text-console sleep; idle shell and `edit` tested. No extra sleep flag. |
+| `/LOCAL C:\NAME.MNX /NONET` | Sleep disabled unless `/SLEEPTEST` is added. |
+| `/LOCAL C:\NAME.MNX /NONET /SLEEPTEST` | Writable local root; **empty slot**; idle initial shell only. |
+| `/LOCAL C:\NAME.MNX /SLEEPNIC` | Opt-in Accton EN2216 R02 recovery; idle initial shell and idle `ktcp`. Do not add `/NONET`. |
+
+Before sleep, exit graphics/apps and close the serial shell. In local mode,
+`edit` deliberately blocks sleep; CF's guarded text-reader policy permits the
+tested editor case. Unsupported activity or a card in the empty-slot mode
+produces a refusal beep/message. A refusal is expected behaviour, not a request
+to bypass a guard. Storage is synced and checked before sleep and after wake.
+A recovery-integrity failure stops operation rather than continuing writes.
+
+With `/SLEEPNIC`, leave the Accton inserted and cable connected. The same `ktcp`
+process survived repeated sleep/wake cycles, and fresh DNS/HTTP/GIF requests
+worked after waking on both speed variants. This does not promise preservation
+of active TCP sessions or DHCP leases through arbitrarily long sleeps.
+Graphics, serial sessions and general application suspend are outside scope.
+
+## Choose your filesystem
+
+Download the **boot ZIP** plus either a CF ZIP or the local-images ZIP.
+The boot kit contains 11 files totalling **185,173 bytes** and generates a kernel
+copy of up to **82,384 bytes**. Allow **320 KiB free on C:** for the boot kit,
+working copy and allocation slack, in addition to any MNX image.
+
+| Option | Filesystem | PCMCIA slot | DOS command from C:\ELKS39FB |
+| --- | --- | --- | --- |
+| CF root | Whole-card Minix partition | Occupied by CF | `RUNELKS /CF` |
+| Local root | Raw Minix file in C:\ | Empty or supported NIC | `RUNELKS /LOCAL C:\ELKS2M.MNX /NONET` |
+
+Add `/DS` for a double-speed machine. Boot from a plain DOS prompt after exiting
+System Manager. Retain the tested DSPEED initialization for an accelerated unit,
+and unload its resident hook with `DSPEED /R` before starting ELKS.
+
+### CompactFlash installation
+
+The four downloads have identical userland contents. Exact sizes deliberately
+leave headroom below nominal card capacities:
+
+| Nominal card | Image inside ZIP | Exact bytes | Filesystem KiB |
+| --- | --- | ---: | ---: |
+| 8 MB | `R4C108.IMG` | 7,340,032 | 7,136 |
+| 16 MB | `R4C116.IMG` | 14,680,064 | 14,304 |
+| 32 MB | `R4C132.IMG` | 31,457,280 | 30,688 |
+| 64 MB | `R4C164.IMG` | 62,914,560 | 61,408 |
+
+1. Verify the release SHA-256 checksums. Use media at least as large as the exact image.
+2. Write the IMG to the **whole CF card**, replacing its contents and partition table.
+   Back up any files you need first, and verify the written image afterward.
+3. Copy the boot ZIP's `ELKS39FB` folder to `C:\ELKS39FB` on the HP.
+4. Insert the prepared CF, exit System Manager, then run:
 
    ```dos
    C:
-   CD \ELKS
-   RUNELKS
+   CD \ELKS39FB
+   RUNELKS /CF
    ```
 
-If `RUNELKS` does not see the card, fully reboot back to DOS and try:
+   On double-speed hardware, use `RUNELKS /DS /CF`.
+5. Confirm `/dev/cfa1` is the mounted root. Keep the root card inserted while ELKS runs.
 
-```dos
-C:
-CD \ELKS
-RUNCARD
+The CF images include corrected HP Nano-X, the tested ELX utility updates,
+ELKSWeb, `nx`, `/root/ser`, and ANSI defaults. The kernel is loaded from C:;
+the older `/linux` copy and development banners inside these byte-preserved
+images are not used to select the running kernel.
+
+The images use Minix V1, 1 KiB blocks and 14-character names. Larger cards keep
+unused capacity beyond the image. The included **host-side** `grow_cf.py` can
+expand an image or a compatible saved card dump to the 16/32/64 MB profiles.
+There is no automatic first-boot or mounted-root expansion. See
+[CF image and growth guide](docs/hp200lx/CF-IMAGES-4.0.md).
+
+### Internal C: installation
+
+The names describe the intended model class, not the image size:
+
+| File | Exact bytes | Initial free space inside | Recommended free C: before installation |
+| --- | ---: | ---: | ---: |
+| `ELKS2M.MNX` | 737,280 (720 KiB) | 94 KiB | 1.1 MiB |
+| `ELKS4M.MNX` | 3,145,728 (3 MiB) | 224 KiB | 3.4 MiB |
+
+Check actual free C: capacity. Case labels and DOS conventional-memory totals
+alone do not establish installed RAM; storage allocation and existing files
+also affect what fits. Free space inside MNX is already part of its file size.
+
+1. Back up an existing MNX before replacing it. Copy the chosen file directly
+   to `C:\` and the complete boot directory to `C:\ELKS39FB`.
+2. Start with an empty slot and networking disabled:
+
+   ```dos
+   C:
+   CD \ELKS39FB
+   RUNELKS /LOCAL C:\ELKS2M.MNX /NONET
+   ```
+
+   Substitute `ELKS4M.MNX` for the full image and add `/DS` on accelerated hardware.
+   To enable empty-slot local sleep, also add `/SLEEPTEST`.
+3. Confirm root is `/dev/ssd`. These files are accessed in place in the internal
+   battery-backed RAM disk; they are not copied into conventional application RAM.
+4. For Ethernet, return to DOS, insert the Accton and boot without `/NONET`:
+
+   ```dos
+   RUNELKS /DS /LOCAL C:\ELKS4M.MNX /SLEEPNIC
+   ```
+
+   Omit `/DS` on factory-speed hardware. `/SLEEPNIC` is optional; it enables the
+   tested idle-network sleep path.
+
+Both images derive from upstream ELKS v0.9.2, retain its DHCP-capable network
+userland, and add ELKSWeb and the ELX tools. The compact edition omits Nano-X,
+games and manuals. The full edition retains stock programs; **the corrected HP
+Nano-X suite is supplied in the CF images**, not promised for the stock-derived
+local image. Both local images are preserved unchanged from the tests and contain
+ELXbat 0.1.3 and ELXdash 0.2.0-test3. Install the separate utility update pack for
+ELXbat 0.1.4's partial redraw and ELXdash test4's clearer charging lock/labels.
+See [ELX tools](docs/hp200lx/ELX-TOOLS-4.0.md).
+
+The loader also accepts the tested upstream **v0.9.2 fd2880-minix.img** as a raw
+filesystem: copy it to a DOS 8.3 name such as `C:\FD2880.IMG`, then use
+`RUNELKS /LOCAL C:\FD2880.IMG`. The loader uses the HP kernel, not the floppy
+boot sector or `/linux`. Stock images do not include ELKSWeb or `/root/ser`.
+Other image versions and filesystem formats require separate validation.
+
+### Networking
+
+The qualified card is the **Accton EN2216 R02**, using the NE2000 path.
+Buffalo, Netgear and other cards are not covered by Release 4 hardware acceptance.
+CF-root mode does not provide Ethernet; picoPCMCIA/DualSlot support is future work.
+Do not hot-plug a NIC or root CF while ELKS is running.
+
+On the supplied local images, start client networking once:
+
+```sh
+ktcp -b -p ne0
+netstat
+web http://frogfind.8088retro.com/
 ```
 
-`RUNCARD` runs Richard Dubs' `CARDIO.EXE` before the normal HP 200LX CF setup path.
+With no static addresses, this `ktcp` requests DHCP. Alternatively, `net start ne0`
+uses `/etc/net.cfg`, including its default server-daemon list. For sleep testing,
+use only `ktcp` and the idle shell; extra daemons can block the sleep guard.
+Do not start a second `ktcp` if one is already running. Static configuration
+belongs in `/etc/net.cfg` and DNS configuration in `/etc/resolv.conf`.
 
-### Quick Persistence Test
+The stock server daemons can report `SO_NOBUFFER: Invalid argument` with the HP
+kernel. These server features are not qualified; that message does not invalidate
+a successful DHCP/client HTTP test. The direct `ktcp` command avoids starting them.
 
-After ELKS boots:
+ELKSWeb supports **HTTP**, not native HTTPS. `68k.news` rendered successfully,
+but its roughly 92 KB page can take a long time to parse/layout and leaves very
+little cache headroom on a nearly full compact filesystem. Start with FrogFind.
+Navigation and forms have narrower test coverage than page loading/rendering.
 
-```text
-cat /root/RELEASE3.TXT
-hphello
-echo r3test >/root/r3test.txt
-sync
-cat /root/r3test.txt
-```
+## Everyday use
 
-Then reboot fully back to DOS, run `RUNELKS` again, and check:
+Run `meminfo`, `df` and `ps` to inspect the system. Use `export TERM=ansi` if an
+image has not already set it. The firmware warning and cached voltage readings
+are not estimates of remaining battery runtime.
 
-```text
-cat /root/r3test.txt
-```
-
-If the file is still present, the PCMCIA/CF Minix root filesystem is persistent.
-
-### Release 3 Files
-
-The boot package contains:
-
-| File | Purpose |
+| Tool | Start / basic controls |
 | --- | --- |
-| `RUNELKS.BAT` | Normal Release 3 DOS entry point. |
-| `RUNCARD.BAT` | Fallback entry point using `CARDIO.EXE` first. |
-| `KERNBOP` | ELKS kernel image with HP 200LX keyboard and CF support. |
-| `ROOT092` | Small boot ramdisk image used by the loader. |
-| `BTGVDX.COM` | DOS loader with embedded `root=cfa1`. |
-| `MKINTS.COM` | Interrupt-vector capture tool. |
-| `CFEN34.COM` | HP 200LX CF setup helper. |
-| `CFEN34.ASM` | Source for `CFEN34.COM`. |
-| `CARDIO.EXE` | Richard Dubs card I/O enabler, used by fallback path. |
+| ELKSWeb | `web` for welcome page; `web http://frogfind.8088retro.com/`; Tab selects links, Enter opens, F6 or Ctrl+L focuses address. |
+| ELXbat | `elxbat`; R rereads cached voltage, Q/Esc exits. Updated build redraws changed regions. |
+| ELXstat | `elxstat` or `elxstat -v` for firmware/system information. |
+| ELX Commander | `elxcmd /root /tmp`; Tab panels, arrows selection, V view, C copy, M move, D delete, N new directory, Q back/exit. |
+| ELXdash | `elxdash`; Tab controls, Left/Right adjust, B battery menu, arrows select, Enter chooses, Esc closes. |
+| ELXctl | `elxctl status`, `elxctl --help`; command-line display/sound/firmware settings. |
+| ELXcap | `elxcap /root/SCREEN.BMP`; manual or delayed BMP/PBM capture. Alt+period hotkey hook is **not included**. |
 
-The root image contains one type `81` Minix partition:
+See [tool instructions and update procedure](docs/hp200lx/ELX-TOOLS-4.0.md).
+Charging controls remain experimental and locked unless `elxdash --charge-test`
+is explicitly used. Release 4 acceptance does not certify NiCd charging.
 
-```text
-start sector: 63
-size:         61377 sectors
-ELKS device:  /dev/cfa1
+On CF, use `nx`, `nx nxclock`, or `nx nxjpeg /root/earth.jpg`. JPEG rendering can
+be slow. ELKSWeb and the ELX tools use their own graphics paths and do not need Nano-X.
+
+![Nano-X clock on the HP 200LX](docs/hp200lx/media/nxclock.jpg)
+
+*Development photograph; exact build and speed of this capture were not recorded.*
+
+### Serial shell
+
+On the palmtop, run `sh /root/ser`. For an unmodified stock image:
+
+```sh
+stty sane 9600 < /dev/ttyS0
+/bin/sh < /dev/ttyS0 > /dev/ttyS0 2>&1
 ```
 
-The root image was compared with the official ELKS `fd2880-minix.img`; no official files are missing. Release 3 additionally includes:
+Connect the peer at **9600 baud, 8N1**. Type `exit` from the peer to release the
+serial shell before sleep. Local Ctrl+C did not reliably release the redirected
+shell on every tested image; do not depend on it as the serial-exit method.
 
-```text
-/bin/hphello
-/root/RELEASE3.TXT
-```
+### Shutdown and reset
 
-The optional hpreboot root image additionally includes:
+Exit applications and use `shutdown -r` to sync/unmount and reboot into DOS.
+Do not move or replace an MNX file while ELKS is using it. A hard reset is a last
+resort: unsaved data and pending writes can be lost. If the HP asks whether to
+initialize after a reset, press **N** to preserve the internal C: drive.
 
-```text
-/bin/hpreboot
-/root/HPREBOOT.TXT
-```
+## Validation and limits
 
-`hpreboot` is a small HP 200LX reboot experiment. It runs `sync()` and then jumps directly to the BIOS reset vector at `FFFF:0000`, matching the tiny DOS `reboot.com` behavior that works on the HP 200LX DOS side. It is intended for testing only until the reset behavior is confirmed on real hardware.
+The maintainer accepted the hardware tests and sleep guards on 21 October 2026.
+The test record distinguishes user observations from serial-verified checks:
+[acceptance summary](docs/hp200lx/ACCEPTANCE-4.0.md).
+The binaries passed 39 discovered software checks with no skips, and release
+packaging verifies every boot file and filesystem against the frozen hashes.
 
-### Release 3 Limitations
+CF growth beyond 32 MiB has host-side allocation/readback/fsck coverage; this is
+not a claim that every CF capacity/card combination or every high-zone workload
+was tested physically. Both post-test MNX copies passed forced read-only offline
+filesystem checks; their clean flags were unset, with no structural errors found.
+No repair or clean-flag rewrite was performed.
 
-- This remains an experimental downstream/community build.
-- The recommended boot path still starts from DOS on the internal `C:` drive.
-- The PCMCIA/CF card provides persistent ELKS root storage, but it is not yet a fully self-booting single-card installer.
-- The HP 200LX keyboard and CF support are proven on real hardware but still need cleanup before they could be proposed upstream.
-- HP-specific firmware features such as display zoom, contrast control, inverse video, and other special key combinations remain future work.
+Source and licenses are supplied with the release. The matching build source is
+in **hp200lx-4.0-source.tar.gz**; follow its release build guide rather than the
+historical repository-root build instructions. Older embedded documentation and
+banners in preserved images identify their original construction builds.
 
----
+## Credits and related projects
 
-## Release 2 - Internal Keyboard
+Thanks to the [ELKS authors](https://github.com/ghaerr/elks), Greg Haerr,
+Richard L. Dubs for HP PCMCIA/BIOS work, Mack Baggette for the HP MINIX firmware
+approach, and Stefan Peichl for DSPEED and SLEEPON. Thanks to YYZKevin for
+[COMrade](https://github.com/yyzkevin/COMrade), used for hardware development.
+See also [ELKSWeb](https://github.com/l00nix/ELKSWeb) and
+[MINIX 2 on HP 200LX](https://github.com/l00nix/minix-2-hp200lx).
 
-Release 2 boots ELKS to a usable interactive shell on a real HP 200LX with working input from the built-in HP 200LX keyboard. It was the first self-contained HP 200LX ELKS release: no external keyboard was needed.
-
-![HP 200LX running ELKS Release 2 with no external keyboard attached](docs/hp200lx/images/release2-unit.jpg)
-
-What works in Release 2:
-
-- Boots to `/bin/sh` using the BIOS console and RAM-root Minix filesystem.
-- The built-in HP 200LX keyboard types into the ELKS shell.
-- Normal letters, numbers, punctuation, Enter, Backspace, Tab, and Space work.
-- Held Shift and held Ctrl work.
-- Shift plus the blue HP application/menu keys produces expected shifted symbols such as `! @ # $ ^ & ( )`.
-- `fork()` and `exec()` work; commands such as `ls` and `cat` run from the RAM-root filesystem.
-
-Release 3 supersedes Release 2 for normal use because it adds persistent PCMCIA/CF root storage.
-
-Release 2 artifact:
-
-- Package: [`releases/hp200lx-release2.zip`](releases/hp200lx-release2.zip)
-- Tested DOS entry point: `RUNN59`
-- Kernel image inside the package: `KERNBOP`
-- Package SHA256: `2be5647745ae6a523262a5c21e51c3fca0295ae6abfcf59272673eaca3a4a6c1`
-
-![ELKS shell on the HP 200LX showing ls and cat /etc/issue typed from the internal keyboard](docs/hp200lx/images/release2-shell.jpg)
-
----
-
-## Release 1 - External Keyboard Bring-Up
-
-Release 1 proved the core boot path: ELKS could boot to a shell on the HP 200LX, run from a RAM-root filesystem, and accept input through an external serial keyboard path. Release 2 replaced that with the internal keyboard, and Release 3 adds persistent PCMCIA/CF root storage.
-
-![Apple Newton keyboard used during the Release 1 external keyboard bring-up](docs/hp200lx/images/release1-newton-keyboard.jpg)
-
-*Apple Newton keyboard used for the Release 1 external keyboard bring-up path.*
-
----
-
-## How It Works
-
-### DOS Loader Chain
-
-The HP 200LX boots DOS first. The Release 3 boot package then uses the DOS loader chain descended from Richard Dubs' MINIX-on-HP-200LX work to prepare the machine and launch ELKS.
-
-### BIOS Console
-
-Release 3 uses the BIOS console path, which matches the HP 200LX display hardware well enough for a reliable text shell.
-
-### Direct HP 200LX Keyboard Scanner
-
-The HP 200LX does not behave like a normal PC/XT keyboard. Release 3 keeps the direct HP 200LX keyboard matrix scanner proven in Release 2. The scanner runs from the kernel idle loop and feeds decoded characters into the console tty queue:
-
-```text
-idle loop -> HP 200LX scanner -> Console_conin() -> tty input queue -> shell
-```
-
-### PCMCIA/CF Root Filesystem
-
-The HP 200LX CF setup helper prepares the card so the ELKS CF/ATA path can see it as `/dev/cfa`. The Release 3 loader passes `root=cfa1`, and the kernel mounts the Minix partition as `/`.
-
-The critical successful boot line is:
-
-```text
-VFS: Mounted root device /dev/cfa1 (0501) minix filesystem.
-```
-
-### Why the Boot Files Stay on C:
-
-A cleaner single-card design was tested: FAT boot partition plus Minix root partition on one PCMCIA/CF card. It is a good future goal, but on the HP 200LX the handoff from DOS booting the card to ELKS reusing the same card was not stable enough for this release.
-
-Release 3 therefore ships the practical, tested design: DOS boot files on the internal `C:` drive, persistent ELKS root on the PCMCIA/CF card.
-
----
-
-## Roadmap
-
-- Test networking with a dual PCMCIA setup, either using an [Accurite DoubleSlot PCMCIA doubler](https://web.archive.org/web/20011222100220/http://www.accurite.com/dslot.html) if one becomes available, or  [yyzkevin](https://github.com/yyzkevin)'s planned [PicoPCMCIA](https://www.yyzkevin.com/picopcmcia/) card once released, so a network card can be added alongside storage.
-- Clean up the HP 200LX keyboard scanner into a maintainable platform-specific driver.
-- Clean up the CF support and boot helpers for a future upstreamable shape.
-- Revisit a fully self-contained PCMCIA/CF boot card as a possible Release 4.
-- Document the final tuple map and keyboard behavior in `docs/hp200lx`.
-- Review HP 200LX BIOS/video functions for display zoom, contrast, inverse video, and related key combinations.
-- Stress-test the persistent filesystem under heavier writes and longer sessions.
-- Review double-speed HP 200LX units separately; Release 3 was tested on a stock-clock unit.
-
----
-
-## Credits
-
-- [ELKS](https://github.com/ghaerr/elks) and its authors - the kernel this builds on (GPLv2).
-- **Greg Haerr** and the ELKS community - for the upstream project and discussion in [ghaerr/elks#2236](https://github.com/ghaerr/elks/issues/2236).
-- **Richard L. Dubs** - the MINIX-on-HP-200LX work that this DOS boot/loader chain descends from; see the archived [`l00nix/dubs-minix-repo`](https://github.com/l00nix/dubs-minix-repo).
-- The HP 100LX/200LX Developer's Guide and HP 200LX user documentation - for low-level keyboard, BIOS, and display details.
-- The [`l00nix/gentleos-hp200lx`](https://github.com/l00nix/gentleos-hp200lx) work - for prior evidence that the internal HP 200LX keyboard can be driven directly.
-- All real-hardware testing in this repo was done on an HP 200LX with 4 MB RAM and PCMCIA/CF storage.
+GEMCAP/CAPLX, CXCTL, ABC/LX and Norton Commander informed utility workflows and
+interface ideas. The ELX tools are independent implementations; their original
+component/font notices remain in the source and image license files. No HP ROM
+or proprietary DOS runtime is distributed. DOS LXdash is a separate project.

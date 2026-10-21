@@ -1,0 +1,15 @@
+{
+  "asset_sha256": "PASS",
+  "all_zip_internal_checksums": "PASS",
+  "source_archive_identity": "PASS",
+  "source_boot_matches_distribution": "PASS",
+  "documentation_local_links": "PASS",
+  "frozen_promotion": "All 11 boot files and six filesystem images matched original manifests during packaging.",
+  "extracted_source_suite": {
+    "discovered": 39,
+    "passed": 39,
+    "skipped": 0,
+    "seconds": 36.988,
+    "result": "PASS"
+  }
+}

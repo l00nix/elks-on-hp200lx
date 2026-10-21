@@ -1,3 +1,5 @@
+> **HP package 4.0:** use the [matching release source and build guide](docs/hp200lx/BUILD-4.0.md). The instructions below describe the historical repository-root tree.
+
 # How to build ?
 
 ## Prerequisites
