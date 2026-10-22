@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-19",
+  "context": "Single-speed HP 200LX; 3.9 FINAL; 720 KiB local root, /NONET. Not final 4.0 memory measurements.",
+  "processing": "Lossless JPEG coefficient rotation 270 degrees, trimming partial edge blocks; lossless MCU-aligned crop 4080x2144+0+480. No resampling, tonal edits or screen-content edits.",
+  "photos": [
+    {
+      "original": "PXL_20261019_134706905.jpg",
+      "original_sha256": "7fc77739a378c636ce4eb188b700dd0c278bfc2cc442aec6c85031b49038a0f0",
+      "file": "startup-local-development.jpg",
+      "sha256": "41a2edab0f9edba4c0f1807306b8274fe46e9cf922f57f462af5593f542a3ad3"
+    },
+    {
+      "original": "PXL_20261019_134815510.jpg",
+      "original_sha256": "962b5903f621827bb1602888967ec327a00e78e2c23687c50ebff9ff86d60f8b",
+      "file": "meminfo-local-development.jpg",
+      "sha256": "8992ec38a54721efc07101ee79ba5ca0b14662a18e817a6908678a88982fb6ff"
+    }
+  ]
+}

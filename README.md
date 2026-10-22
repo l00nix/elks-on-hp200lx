@@ -20,10 +20,15 @@ Install the complete boot folder at **C:\ELKS4**. The boot banner and `uname -a`
 identify `hp200lx-4.0-local` or `hp200lx-4.0-cf`, dated 2026-10-21.
 Keep all boot-kit files together; do not mix helpers and kernels from other builds.
 
-![ELKSWeb displaying FrogFind on a single-speed HP 200LX](docs/hp200lx/media/release4-frogfind-single.jpg)
+![HP 200LX startup during 3.9 FINAL local-filesystem testing](docs/hp200lx/media/startup-local-development.jpg)
 
-*Actual palmtop during Release 4 acceptance: the single-speed unit loaded
-FrogFind over the Internet through the Accton card, including the frog GIF.*
+*Startup on the single-speed HP 200LX with the 720 KiB local filesystem.*
+
+![HP 200LX meminfo output during the same local-filesystem test](docs/hp200lx/media/meminfo-local-development.jpg)
+
+*Memory information from the same test session. These photographs were taken
+on 19 October 2026 during 3.9 FINAL development; the displayed version labels
+and memory figures belong to that build.*
 
 ## What works
 
