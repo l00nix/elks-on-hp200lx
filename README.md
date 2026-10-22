@@ -20,15 +20,14 @@ Install the complete boot folder at **C:\ELKS4**. The boot banner and `uname -a`
 identify `hp200lx-4.0-local` or `hp200lx-4.0-cf`, dated 2026-10-21.
 Keep all boot-kit files together; do not mix helpers and kernels from other builds.
 
-![HP 200LX startup during 3.9 FINAL local-filesystem testing](docs/hp200lx/media/startup-local-development.jpg)
+![HP 200LX displaying the ELKS boot log and /etc/issue](docs/hp200lx/media/ELKS_startup_with_etc_issue.jpg)
 
-*Startup on the single-speed HP 200LX with the 720 KiB local filesystem.*
+*Development boot: HP 200LX package 3.8 beta 1, based on ELKS 0.9.2, followed by the contents of /etc/issue. This photograph retains the diagnostic messages visible during that boot.*
 
-![HP 200LX meminfo output during the same local-filesystem test](docs/hp200lx/media/meminfo-local-development.jpg)
-
-*Memory information from the same test session. These photographs were taken
-on 19 October 2026 during 3.9 FINAL development; the displayed version labels
-and memory figures belong to that build.*
+These consistently cropped photographs show earlier development builds, including
+3.8 beta 1 and ELX utilities 0.1. They are temporary illustrations while updated
+4.0 photographs are prepared; displayed versions and memory figures belong to
+the photographed builds.
 
 ## What works
 
@@ -62,6 +61,22 @@ A **+** between keys means hold them together.
 | <img src="docs/hp200lx/keys/shortcut-reboot.svg" alt="Ctrl + Alt + Del" width="212"> | Reboot to DOS | **Ctrl + Alt + Del** restarts the palmtop. Save and sync first. |
 | <img src="docs/hp200lx/keys/shortcut-reset.svg" alt="Ctrl + Shift + ON" width="204"> | Hard reset | **Ctrl + Shift + ON** recovers a hung system. At an initialization prompt, press **N** to preserve C:. |
 
+
+![meminfo at the standard text zoom with a light background](docs/hp200lx/media/meminfo_regular_screen.jpg)
+
+*meminfo at the standard text zoom, showing 424K free in this development session. Free memory varies with the build and running programs.*
+
+![meminfo at the first enlarged firmware text zoom](docs/hp200lx/media/meminfo_zoom_1.jpg)
+
+*First enlarged text zoom, selected with Fn + Space. The firmware shows a smaller portion of the logical console.*
+
+![meminfo at the second enlarged firmware text zoom](docs/hp200lx/media/meminfo_zoom2.jpg)
+
+*Second enlarged text zoom. The text continuing beyond the right edge is outside the current viewport; Menu + arrow keys pan the view.*
+
+![meminfo with light text on a dark background](docs/hp200lx/media/meminfo_inverted_screen.jpg)
+
+*The same memory display with inverted polarity, toggled using ON + /.*
 
 ### Sleep modes
 
@@ -219,6 +234,17 @@ but its roughly 92 KB page can take a long time to parse/layout and leaves very
 little cache headroom on a nearly full compact filesystem. Start with FrogFind.
 Navigation and forms have narrower test coverage than page loading/rendering.
 
+The following development photographs show the **offline FrogFind test page**,
+with light and dark display polarity.
+
+![ELKSWeb displaying the offline FrogFind page on a light background](docs/hp200lx/media/ELKSWeb_frogfind_inverted.jpg)
+
+*ELKSWeb rendering the local FrogFind test page, including its frog image, with a light background.*
+
+![ELKSWeb displaying the offline FrogFind page on a dark background](docs/hp200lx/media/ELKSWeb_frogfind.jpg)
+
+*The same local FrogFind page with the opposite display polarity.*
+
 ## Everyday use
 
 Run `meminfo`, `df` and `ps` to inspect the system. Use `export TERM=ansi` if an
@@ -238,6 +264,14 @@ are not estimates of remaining battery runtime.
 See [tool instructions and update procedure](docs/hp200lx/ELX-TOOLS-4.0.md).
 Charging controls remain experimental and locked unless `elxdash --charge-test`
 is explicitly used. Release 4 acceptance does not certify NiCd charging.
+
+![ELXbat graphical main and backup battery voltage gauges](docs/hp200lx/media/ELXbat.jpg)
+
+*ELXbat 0.1 showing cached main and backup battery voltages. The gauges represent voltage, not remaining battery capacity.*
+
+![ELXstat firmware and system status output paused in more](docs/hp200lx/media/ELXstat.jpg)
+
+*ELXstat 0.1 displaying battery, power, display and firmware information, paged through more.*
 
 On CF, use `nx`, `nx nxclock`, or `nx nxjpeg /root/earth.jpg`. JPEG rendering can
 be slow. ELKSWeb and the ELX tools use their own graphics paths and do not need Nano-X.
