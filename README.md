@@ -24,11 +24,6 @@ Keep all boot-kit files together; do not mix helpers and kernels from other buil
 
 *Development boot: HP 200LX package 3.8 beta 1, based on ELKS 0.9.2, followed by the contents of /etc/issue. This photograph retains the diagnostic messages visible during that boot.*
 
-These consistently cropped photographs show earlier development builds, including
-3.8 beta 1 and ELX utilities 0.1. They are temporary illustrations while updated
-4.0 photographs are prepared; displayed versions and memory figures belong to
-the photographed builds.
-
 ## What works
 
 - Factory-speed and double-speed HP 200LX operation; `/DS` selects the display correction.
@@ -234,16 +229,16 @@ but its roughly 92 KB page can take a long time to parse/layout and leaves very
 little cache headroom on a nearly full compact filesystem. Start with FrogFind.
 Navigation and forms have narrower test coverage than page loading/rendering.
 
-The following development photographs show the **offline FrogFind test page**,
-with light and dark display polarity.
+The following photographs show the **offline FrogFind test page** and the
+**ELKSWeb welcome page** on the HP 200LX.
 
 ![ELKSWeb displaying the offline FrogFind page on a light background](docs/hp200lx/media/ELKSWeb_frogfind_inverted.jpg)
 
 *ELKSWeb rendering the local FrogFind test page, including its frog image, with a light background.*
 
-![ELKSWeb displaying the offline FrogFind page on a dark background](docs/hp200lx/media/ELKSWeb_frogfind.jpg)
+![ELKSWeb welcome page on the HP 200LX](docs/hp200lx/media/elksweb-welcome-hardware-development.jpg)
 
-*The same local FrogFind page with the opposite display polarity.*
+*The ELKSWeb welcome page on the HP 200LX.*
 
 ## Everyday use
 
