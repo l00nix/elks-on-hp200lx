@@ -1,3 +1,5 @@
+> ⚠️ I’m developing this project with AI assistance out of personal interest. It may not fully align with the ELKS maintainer team’s architectural or development guidelines. Please use it at your own discretion. ⚠️
+
 # ELKS on the HP 200LX
 
 **HP 200LX package 4.0 · based on ELKS 0.9.2**
